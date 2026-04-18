@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html>
+<html lang="">
 <head>
     <meta charset="utf-8">
     <title>Dating Sim! — It's a Feature, Not a Bug</title>
@@ -29,7 +29,7 @@
             max-height: 100vh;
             aspect-ratio: 16/9;
             display: block;
-            /* No border, no background — canvas clears itself each frame */
+            outline: none;
         }
     </style>
 
@@ -37,6 +37,9 @@
     <script type="text/javascript" src="core/timer.js"></script>
     <script type="text/javascript" src="core/gameengine.js"></script>
     <script type="text/javascript" src="core/util.js"></script>
+    <script type="text/javascript" src="assets/data/dialogue.js"></script>
+    <script type="text/javascript" src="scenes/NameInputScene.js"></script>
+    <script type="text/javascript" src="scenes/DialogueScene.js"></script>
     <script type="text/javascript" src="./main.js"></script>
 </head>
 <body>
