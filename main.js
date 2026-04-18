@@ -37,6 +37,7 @@ ASSET_MANAGER.queueDownload("./assets/DatingGameUI/VictoryOrDefeat/DefeatTitleCo
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/VictoryOrDefeat/TextContainer.png");
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/VictoryOrDefeat/ContinueBtn.png");
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/VictoryOrDefeat/ContinueBtnPressed.png");
+ASSET_MANAGER.queueDownload("./assets/DatingGameUI/Background.jpg");
 
 ASSET_MANAGER.downloadAll(() => {
 	const canvas = document.getElementById("gameWorld");
@@ -88,6 +89,9 @@ class HomeScreen {
 		// hover/press
 		this.hovered = false;
 		this.pressed = false;
+
+		// fade to black before handing off to NameInputScene
+		this.transitionAlpha = 0;
 	}
 
 	// helpers
@@ -125,15 +129,15 @@ class HomeScreen {
 
 			if (t >= 1) {
 				this.state = "done";
-
-				// YENI OR ZAINAB
-				// when title/button are gone this entity stays alive
-				// but only draws the background.  Your partner's character
-				// sprite entity can now be added:
-				//   gameEngine.addEntity(new CharacterSprite(gameEngine));
+			}
+		} else if (this.state === "done") {
+			// fade to black then hand off to NameInputScene
+			this.transitionAlpha += dt * 1.5;
+			if (this.transitionAlpha >= 1) {
+				this.game.addEntity(new NameInputScene(this.game));
+				this.removeFromWorld = true;
 			}
 		}
-		// "done" — nothing left to update in this entity
 	}
 
 	// Draw
@@ -146,8 +150,12 @@ class HomeScreen {
 			ctx.fillRect(0, 0, this.W, this.H);
 		}
 
-		// nothing else to draw once animation completes
-		if (this.state === "done") return;
+		// during "done" state, draw fade to black overlay then return
+		if (this.state === "done") {
+			ctx.fillStyle = `rgba(0,0,0,${Math.min(this.transitionAlpha, 1)})`;
+			ctx.fillRect(0, 0, this.W, this.H);
+			return;
+		}
 
 		// apply shared opacity for UI layer
 		ctx.save();
