@@ -1,12 +1,12 @@
 const gameEngine = new GameEngine();
 const ASSET_MANAGER = new AssetManager();
 
-// ── Queue assets ───────────────────────────────────────────────────────
+// Queue assets
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/HomeScreen/HomeScreenBackground.jpg");
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/HomeScreen/Button.png");
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/HomeScreen/ButtonPressed.png");
 
-// Pre-load everything else so they're ready when scenes need them
+// Preload everything else so they're ready when scenes need them
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/Icons/BackArrow.png");
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/Icons/BlueHeart.png");
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/Icons/PinkHeart.png");
@@ -38,7 +38,6 @@ ASSET_MANAGER.queueDownload("./assets/DatingGameUI/VictoryOrDefeat/TextContainer
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/VictoryOrDefeat/ContinueBtn.png");
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/VictoryOrDefeat/ContinueBtnPressed.png");
 
-// ── Boot ──────────────────────────────────────────────────────────────
 ASSET_MANAGER.downloadAll(() => {
 	const canvas = document.getElementById("gameWorld");
 	const ctx = canvas.getContext("2d");
@@ -47,48 +46,37 @@ ASSET_MANAGER.downloadAll(() => {
 	gameEngine.start();
 });
 
-// ═════════════════════════════════════════════════════════════════════
-//  HOME SCREEN
-//
-//  STATE MACHINE:
-//    "idle"      — background + title + START button visible, waiting
-//    "animating" — user clicked START; title slides up, button slides
-//                  down off-screen over ~900ms
-//    "done"      — UI fully gone, clean background remains for your
-//                  partner to place a character sprite on top
-// ═════════════════════════════════════════════════════════════════════
 class HomeScreen {
 	constructor(game) {
 		this.game = game;
 		this.removeFromWorld = false;
 
-		// Assets
+		// assets
 		this.bg     = ASSET_MANAGER.getAsset("./assets/DatingGameUI/HomeScreen/HomeScreenBackground.jpg");
 		this.btnImg = ASSET_MANAGER.getAsset("./assets/DatingGameUI/HomeScreen/Button.png");
 		this.btnPrs = ASSET_MANAGER.getAsset("./assets/DatingGameUI/HomeScreen/ButtonPressed.png");
 
-		// Canvas dimensions
+		// canvas dimensions
 		this.W = this.game.ctx.canvas.width;
 		this.H = this.game.ctx.canvas.height;
 
-		// ── Button geometry ─────────────────────────────────────────
-		// Slightly bigger than before as requested
+		// Button Geometry
 		this.btnW = 560;
 		this.btnH = 100;
 		this.btnX = this.W / 2 - this.btnW / 2;  // horizontally centred
-		this.btnY = this.H * 0.4;                  // resting Y position (moved up)
+		this.btnY = this.H * 0.4;                  // resting Y position (moved up smaller #, move down larger #)
 
-		// ── Title geometry ──────────────────────────────────────────
-		// Title draws at titleY; starts at its resting position
-		this.titleY      = 300;  // centre-line of the main title text
-		this.subtitleY   = 410;  // centre-line of the subtitle text
+		// title geometry
+		// title draws at titleY; starts at its resting position
+		this.titleY      = 300;  // center line of the main title text
+		this.subtitleY   = 410;  // center line of the subtitle text
 
-		// ── Animation state ─────────────────────────────────────────
+		// Animation state
 		this.state        = "idle";   // "idle" | "animating" | "done"
 		this.animTimer    = 0;
 		this.animDuration = 0.9;      // seconds for the slide animation
 
-		// How many pixels each element travels during animation
+		// how many pixels each element travels during animation
 		this.titleSlide  = -420;      // title slides UP  (negative = up)
 		this.btnSlide    = 400;       // button slides DOWN off-screen
 
@@ -97,29 +85,27 @@ class HomeScreen {
 		this.btnOffset   = 0;
 		this.opacity     = 1;         // fades UI out as it animates away
 
-		// ── Hover / press ────────────────────────────────────────────
+		// hover/press
 		this.hovered = false;
 		this.pressed = false;
 	}
 
-	// ── Helpers ───────────────────────────────────────────────────────
+	// helpers
 	isHit(mx, my) {
 		const by = this.btnY + this.btnOffset;
 		return mx >= this.btnX && mx <= this.btnX + this.btnW &&
 			my >= by        && my <= by + this.btnH;
 	}
 
-	// Ease-out cubic  t ∈ [0,1] → [0,1]
 	easeOut(t) { return 1 - Math.pow(1 - t, 3); }
 
-	// ── Update ────────────────────────────────────────────────────────
 	update() {
 		const dt    = this.game.clockTick;
 		const mouse = this.game.mouse;
 		const click = this.game.click;
 
 		if (this.state === "idle") {
-			// Live hover check — no click buffering needed
+			// live hover check; no click buffering needed
 			this.hovered = mouse ? this.isHit(mouse.x, mouse.y) : false;
 
 			if (click && this.isHit(click.x, click.y)) {
@@ -139,8 +125,9 @@ class HomeScreen {
 
 			if (t >= 1) {
 				this.state = "done";
-				// ── Hand off to your partner's scene here ──────────
-				// When the title/button are gone this entity stays alive
+
+				// YENI OR ZAINAB
+				// when title/button are gone this entity stays alive
 				// but only draws the background.  Your partner's character
 				// sprite entity can now be added:
 				//   gameEngine.addEntity(new CharacterSprite(gameEngine));
@@ -149,9 +136,9 @@ class HomeScreen {
 		// "done" — nothing left to update in this entity
 	}
 
-	// ── Draw ──────────────────────────────────────────────────────────
+	// Draw
 	draw(ctx) {
-		// 1. Background always draws at full opacity
+		// background always draws at full opacity
 		if (this.bg) {
 			ctx.drawImage(this.bg, 0, 0, this.W, this.H);
 		} else {
@@ -159,10 +146,10 @@ class HomeScreen {
 			ctx.fillRect(0, 0, this.W, this.H);
 		}
 
-		// Nothing else to draw once animation completes
+		// nothing else to draw once animation completes
 		if (this.state === "done") return;
 
-		// 2. Apply shared opacity for the UI layer
+		// apply shared opacity for UI layer
 		ctx.save();
 		ctx.globalAlpha = this.opacity;
 
@@ -172,32 +159,32 @@ class HomeScreen {
 
 		ctx.textAlign = "center";
 
-		// Main title
+		// main title
 		ctx.font = "bold 108px 'The Bold Font', Georgia, serif";
 		ctx.fillStyle = "#ffffff";
 		ctx.shadowColor = "rgba(220, 80, 140, 0.85)";
 		ctx.shadowBlur  = 28;
 		ctx.fillText("DATING SIM!", this.W / 2, curTitleY);
 
-		// Subtitle
+		// subtitle
 		ctx.shadowBlur = 0;
 		ctx.font = "italic 44px 'Roboto', Georgia, sans-serif";
 		ctx.fillStyle = "#d4457a";
 		ctx.fillText("It's a Feature, Not a Bug", this.W / 2, curSubtitleY);
 
-		// 4. Button  ── slides DOWN
+		// button, slides DOWN
 		const curBtnY = this.btnY + this.btnOffset;
 		const sprite  = this.pressed ? this.btnPrs : this.btnImg;
 
 		if (sprite) {
 			ctx.drawImage(sprite, this.btnX, curBtnY, this.btnW, this.btnH);
 		} else {
-			// Fallback rect
+			// fallback rect
 			ctx.fillStyle = this.hovered ? "#cc5599" : "#e070aa";
 			ctx.fillRect(this.btnX, curBtnY, this.btnW, this.btnH);
 		}
 
-		// Button label
+		// button label
 		ctx.font = "bold 32px 'The Bold Font', 'Roboto', sans-serif";
 		ctx.fillStyle = "#ffffff";
 		ctx.shadowBlur = 0;
@@ -205,7 +192,7 @@ class HomeScreen {
 		ctx.textBaseline = "middle";
 		ctx.fillText("START NEW GAME", this.btnX + this.btnW / 2, curBtnY + this.btnH / 2);
 
-		// Hover glow ring around button
+		// hover glow ring around button
 		if (this.hovered && this.state === "idle") {
 			ctx.strokeStyle = "rgba(255, 180, 220, 0.7)";
 			ctx.lineWidth   = 4;
