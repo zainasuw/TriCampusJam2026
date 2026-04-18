@@ -1,10 +1,38 @@
-﻿
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Game Project Title Goes Here</title>
-  
+    <title>Dating Sim! — It's a Feature, Not a Bug</title>
+    <style>
+        @font-face {
+            font-family: 'The Bold Font';
+            src: url('./assets/fonts/TheBoldFont.ttf') format('truetype');
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url('./assets/fonts/Roboto-Regular.ttf') format('truetype');
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        canvas {
+            max-width: 100vw;
+            max-height: 100vh;
+            aspect-ratio: 16/9;
+            display: block;
+            /* No border, no background — canvas clears itself each frame */
+        }
+    </style>
+
     <script type="text/javascript" src="core/assetmanager.js"></script>
     <script type="text/javascript" src="core/timer.js"></script>
     <script type="text/javascript" src="core/gameengine.js"></script>
@@ -12,6 +40,7 @@
     <script type="text/javascript" src="./main.js"></script>
 </head>
 <body>
-    <canvas id="gameWorld" width="1024" height="768" style="background: white; border: 1px solid black" tabindex="0" autofocus></canvas>
+
+<canvas id="gameWorld" width="1920" height="1080" tabindex="0" autofocus></canvas>
 </body>
 </html>
