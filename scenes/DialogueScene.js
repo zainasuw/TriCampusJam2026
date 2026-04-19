@@ -1,16 +1,3 @@
-// Main dialogue scene. Drives the visual novel core loop
-//
-// Layout
-// - Character portrait container: centered-left, vertically centered in upper 2/3
-// - Dialogue container: bottom strip, holding speaker name + text + NextBtn
-// - Reply buttons: shown ONLY when the current node is a "choice" and typing is done;
-// when visible they take over the lower half (player's turn)
-//
-// Bug mechanics (triggered by node.bug field):
-//  - "duc_reboot"    : glitch shake + red tint, then jump to node.reboot target
-//  - "muhammed_loop"   : the display text repeats 3 times in 3 different fonts
-//  - "mikhail_garble": random @#$!% symbols sprinkled into displayed text
-
 class DialogueScene {
     constructor(game, startNodeId) {
         this.game = game;
@@ -27,8 +14,8 @@ class DialogueScene {
         this.typingTimer = 0;
         this.typingSpeed = 0.025;
 
-        // Dialogue state
-        //   phases: "typing" | "idle" | "choice" | "system" | "system_pause" | "end_trigger"
+        // dialogue state
+        // phases: "typing" | "idle" | "choice" | "system" | "system_pause" | "end_trigger"
         this.phase = "typing";
         this.currentSpeaker = "";
         this.currentPortrait = "";
@@ -36,14 +23,14 @@ class DialogueScene {
         this.nextNodeId = null;
         this.currentNode = null;
 
-        // System state
+        // system state
         this.systemLines = [];
         this.systemLineIndex = 0;
         this.systemLineTimer = 0;
         this.pauseTimer = 0;
         this.pendingNextForSystem = null;
 
-        // Bug mechanic state
+        // bug mechanic state
         this.muhammedLoopCount = 0;      // how many repeats have been rendered (0-2)
         this.muhammedLoopPressed = 0;    // user has clicked Next this many times
         this.mikhailGarbleSeed = 0;
@@ -56,27 +43,27 @@ class DialogueScene {
         this.nextBtnPressed = false;
         this.replyBtnPressedIndex = -1;
 
-        // Fade in
+        // fade in
         this.fadeAlpha = 1;
         this.fadingIn = true;
-        // Fade out to day transition
+        // fade out to day transition
         this.fadingOut = false;
         this.fadeOutAlpha = 0;
         this.fadeOutTarget = null;  // function to call when fade completes
 
-        // Layout constants (canvas is 1920x1080)
-        //   Character portrait - centered-left, upper-middle
+        // layout constants (canvas is 1920x1080)
+        // character portrait, centered left, upper middle
         this.CHAR_BOX = { x: 260, y: 120, w: 520, h: 640 };
-        //   Dialogue box - bottom strip, full width
+        // Dialogue box, bottom strip, full width
         this.DLG      = { x: 60,  y: 790, w: 1800, h: 200 };
-        //   Next button inside the dialogue box (bottom-right corner)
-        this.NEXT     = { x: 1800, y: 920, w: 64,  h: 56 };
-        //   Speaker name container - left of dialogue box, centered vertically
-        //   (placed above the dialogue container per user spec)
+        // next button inside the dialogue box bottom right corner
+        this.NEXT     = { x: 1760, y: 910, w: 64,  h: 56 };
+        // speaker name contained left of dialogue box, centered vertically
+        // placed above the dialogue container per user spec
         this.SPEAKER  = { x: 60, y: 720, w: 380, h: 70 };
 
-        //   Reply button grid - shown during "choice" phase, takes up center
-        //   4 equal buttons, centered horizontally
+        // reply button grid, shown during "choice" phase, takes up center
+        // 4 equal buttons, centered horizontally
         this.REPLY_W = 820;
         this.REPLY_H = 110;
         this.REPLY_GAP = 22;
