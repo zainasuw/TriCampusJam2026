@@ -51,16 +51,16 @@ class DialogueScene {
         this.fadeOutAlpha = 0;
         this.fadeOutTarget = null;  // function to call when fade completes
 
-        // layout constants (canvas is 1920x1080)
-        // character portrait, centered left, upper middle
-        this.CHAR_BOX = { x: 260, y: 120, w: 520, h: 640 };
-        // Dialogue box, bottom strip, full width
-        this.DLG      = { x: 60,  y: 790, w: 1800, h: 200 };
-        // next button inside the dialogue box bottom right corner
+        // Layout constants (canvas is 1920x1080)
+        //   Character portrait - minimized icon inside the left of the dialogue box
+        this.CHAR_BOX = { x: 80, y: 760, w: 210, h: 210 };
+        //   Dialogue box - bottom strip, full width (upscaled height)
+        this.DLG      = { x: 60,  y: 740, w: 1800, h: 250 };
+        //   Next button inside the dialogue box (bottom-right corner)
         this.NEXT     = { x: 1760, y: 910, w: 64,  h: 56 };
-        // speaker name contained left of dialogue box, centered vertically
-        // placed above the dialogue container per user spec
-        this.SPEAKER  = { x: 60, y: 720, w: 380, h: 70 };
+        //   Speaker name container - left of dialogue box, centered vertically
+        //   (placed above the dialogue container per user spec)
+        this.SPEAKER  = { x: 60, y: 660, w: 380, h: 70 };
 
         // reply button grid, shown during "choice" phase, takes up center
         // 4 equal buttons, centered horizontally
@@ -458,15 +458,16 @@ class DialogueScene {
         ctx.save();
         ctx.translate(shakeX, shakeY);
 
-        // character portrait container (centered-left)
-        this._drawCharacterContainer(ctx, AM);
-
-        // speaker name container (small label above dialogue box)
-        this._drawSpeakerLabel(ctx);
-
         // dialogue container + text (only when NOT in choice phase, i.e. character is speaking)
         if (this.phase === "typing" || this.phase === "idle") {
+            // Draw dialogue box FIRST (bottom layer)
             this._drawDialogueBox(ctx, AM);
+
+            // Draw character container ON TOP of dialogue box
+            this._drawCharacterContainer(ctx, AM);
+
+            // Draw speaker name container ON TOP
+            this._drawSpeakerLabel(ctx);
         }
 
         // reply buttons (choice phase only)
@@ -508,7 +509,7 @@ class DialogueScene {
 
         // portrait silhouette inside the container [placeholder for actual sprite art]
         const cx = c.x + c.w / 2;
-        const cy = c.y + c.h * 0.55;
+        const cy = c.y + c.h * 0.5;
 
         // tint based on character
         const speakerTint = {
@@ -531,11 +532,11 @@ class DialogueScene {
 
         // Head
         ctx.beginPath();
-        ctx.arc(cx, cy - 140, 70, 0, Math.PI * 2);
+        ctx.arc(cx, cy - 35, 30, 0, Math.PI * 2);
         ctx.fill();
-        // Body
+        // Body (shifted up and scaled)
         ctx.beginPath();
-        ctx.ellipse(cx, cy + 80, 110, 160, 0, Math.PI, 0, true);
+        ctx.ellipse(cx, cy , 50, 75, 0, Math.PI, 0, true);
         ctx.fill();
         ctx.restore();
     }
@@ -620,7 +621,7 @@ class DialogueScene {
                 ctx.font = fonts[i];
                 // dim already clicked repetitions
                 ctx.globalAlpha = i < this.muhammedLoopPressed ? 0.4 : 1;
-                this._wrapText(ctx, renderText, d.x + 32, y, d.w - 220, 36);
+                this._wrapText(ctx, renderText, d.x + 280, y, d.w - 480, 36);
                 y += 52;
             }
             ctx.globalAlpha = 1;
@@ -630,12 +631,12 @@ class DialogueScene {
             ctx.fillStyle = "rgba(100, 100, 140, 0.75)";
             ctx.fillText(
                 `(loop ${this.muhammedLoopPressed + 1} / 3; click Next to skip)`,
-                d.x + 32,
+                d.x + 280,
                 d.y + d.h - 28
             );
         } else {
             ctx.font = "bold 32px 'The Bold Font', Georgia, serif";
-            this._wrapText(ctx, renderText, d.x + 32, d.y + 32, d.w - 120, 44);
+            this._wrapText(ctx, renderText, d.x + 280, d.y + 40, d.w - 380, 44);
         }
 
         // next button (inside dialogue box, bottom-right)
