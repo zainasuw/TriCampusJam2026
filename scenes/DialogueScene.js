@@ -92,13 +92,17 @@ class DialogueScene {
     }
 
     // Hub routing, if player selected a bachelor visit, remap the day1 node id
-    // to the appropriate day-N id based on GameState.currentDay.
+    // to the appropriate day-N id based on GameState.visitCounts.
     _remapForDay(nodeId) {
         const match = nodeId.match(/^(duc|muhammed|mikhail)_day1_intro$/);
         if (!match) return nodeId;
         const who = match[1];
-        const day = Math.min(GameState.currentDay, 3);
-        return `${who}_day${day}_intro`;
+        
+        // increment visit count for this character
+        GameState.visitCounts[who]++;
+        const interactionNum = Math.min(GameState.visitCounts[who], 3);
+        
+        return `${who}_day${interactionNum}_intro`;
     }
 
     loadNode(nodeId) {
@@ -144,6 +148,11 @@ class DialogueScene {
             this.currentPortrait = node.portrait || "";
             this.currentChoices = node.choices || null;
             this.nextNodeId = node.next || null;
+
+            // unlock Tutorial character sheet once he introduces himself as "TUTORIAL"
+            if (this.currentSpeaker === "TUTORIAL" && !GameState.metCharacters.tutorial) {
+                GameState.metCharacters.tutorial = true;
+            }
 
             // trigger Đức shake effect if this node declares a reboot bug
             // we detect reboot arrival: if node.bug is 'duc_reboot', we are ON the
@@ -241,6 +250,8 @@ class DialogueScene {
             return;
         }
 
+        let justFinishedTyping = false;
+
         // typing effect
         if (this.phase === "typing") {
             this.typingTimer += dt;
@@ -250,7 +261,8 @@ class DialogueScene {
                 this.displayText = this.fullText.slice(0, this.charIndex);
             }
             if (this.charIndex >= this.fullText.length) {
-                this.phase = this.currentChoices ? "choice" : "idle";
+                this.phase = "idle";
+                justFinishedTyping = true;
             }
         }
 
@@ -277,12 +289,16 @@ class DialogueScene {
 
         // click handling
         if (click) {
-            if (this.phase === "typing") {
-                // skip typing
+            const cx = click.x;
+            const cy = click.y;
+            // always consume click immediately so it can never linger into later frames
+            this.game.click = null;
+
+            if (this.phase === "typing" || justFinishedTyping) {
+                // skip typing, firmly stopping at idle and safely eating the click
                 this.charIndex = this.fullText.length;
                 this.displayText = this.fullText;
-                this.phase = this.currentChoices ? "choice" : "idle";
-                this.game.click = null;
+                this.phase = "idle";
                 return;
             }
 
@@ -294,25 +310,26 @@ class DialogueScene {
                         // pulse the next button to show it was pressed
                         this.nextBtnPressed = true;
                         setTimeout(() => { this.nextBtnPressed = false; }, 120);
-                        this.game.click = null;
                         return;
                     }
                 }
 
                 // click on Next button OR anywhere on dialogue box to advance
                 const n = this.NEXT, d = this.DLG;
-                const onNext = click.x >= n.x && click.x <= n.x + n.w &&
-                    click.y >= n.y && click.y <= n.y + n.h;
-                const onBox  = click.x >= d.x && click.x <= d.x + d.w &&
-                    click.y >= d.y && click.y <= d.y + d.h;
+                const onNext = cx >= n.x && cx <= n.x + n.w && cy >= n.y && cy <= n.y + n.h;
+                const onBox  = cx >= d.x && cx <= d.x + d.w && cy >= d.y && cy <= d.y + d.h;
                 if (onNext || onBox) {
                     if (onNext) {
                         this.nextBtnPressed = true;
                         setTimeout(() => { this.nextBtnPressed = false; }, 120);
                     }
-                    if (this.nextNodeId) this.loadNode(this.nextNodeId);
-                    else this.phase = "end";
-                    this.game.click = null;
+                    if (this.currentChoices) {
+                        this.phase = "choice";
+                    } else if (this.nextNodeId) {
+                        this.loadNode(this.nextNodeId);
+                    } else {
+                        this.phase = "end";
+                    }
                 }
                 return;
             }
@@ -357,12 +374,10 @@ class DialogueScene {
                                 this.game.addEntity(new EndingScene(this.game, ending));
                                 this.removeFromWorld = true;
                             });
-                            this.game.click = null;
                             return;
                         }
 
                         this.loadNode(choice.next);
-                        this.game.click = null;
                         break;
                     }
                 }
@@ -639,8 +654,8 @@ class DialogueScene {
             this._wrapText(ctx, renderText, d.x + 280, d.y + 40, d.w - 380, 44);
         }
 
-        // next button (inside dialogue box, bottom-right)
-        if (this.phase === "idle" && this.nextNodeId) {
+        // next button (idle phase only)
+        if (this.phase === "idle" && (this.nextNodeId || this.currentChoices)) {
             const n = this.NEXT;
             const key = (this.nextBtnHovered || this.nextBtnPressed)
                 ? "./assets/DatingGameUI/NextBtnPressed.png"
