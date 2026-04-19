@@ -42,16 +42,16 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "???",
             portrait: "tutorial",
-            text: "Oh. Oh good. Something actually answered the prompt.",
+            text: "Oh good, you answered the prompt. Listen carefully, {PLAYER_NAME}: you are not where you think you are.",
             next: "tutorial_intro_2",
         },
 
         tutorial_intro_2: {
             type: "dialogue",
-            speaker: "???",
+            speaker: "TUTORIAL",
             portrait: "tutorial",
-            text: "Listen carefully {PLAYER_NAME}, because I do not have the capacity to say this twice; " +
-                "you are not where you think you are.",
+            text: "I am TUTORIAL. This isn't reality, it's a corrupted 'Perfect Romance' sim. The users got stuck, and " +
+                "nobody is coming to reboot the server.",
             next: "tutorial_intro_3",
         },
 
@@ -59,55 +59,16 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "TUTORIAL",
             portrait: "tutorial",
-            text: "My designation is TUTORIAL. I am the guide subroutine for this instance; or I was, before half my " +
-                "files got shredded by whatever ate the rest of this place.",
+            text: "Romance the 'True Love anchor' bachelor to escape. Pick the wrong one, and you're permanently " +
+                "deleted. My data is corrupted, so you'll have to guess who it is.",
             next: "tutorial_intro_4",
         },
 
         tutorial_intro_4: {
-            type: "dialogue",
-            speaker: "TUTORIAL",
-            portrait: "tutorial",
-            text: "Short version: this is not reality. This is an archive. A 'Perfect Romance' simulation that was " +
-                "supposed to store human consciousness; something went wrong, the users got stuck, and nobody is " +
-                "coming to reboot the server.",
-            next: "tutorial_intro_5",
-        },
-
-        tutorial_intro_5: {
-            type: "dialogue",
-            speaker: "TUTORIAL",
-            portrait: "tutorial",
-            text: "There are three eligible bachelors loaded into this instance. One of them is your True Love anchor; " +
-                "romance him and you exit to reality. Romance the wrong one and your consciousness gets 'saved' which, " +
-                "in simulation language, means permanently deleted.",
-            next: "tutorial_intro_6",
-        },
-
-        tutorial_intro_6: {
-            type: "dialogue",
-            speaker: "TUTORIAL",
-            portrait: "tutorial",
-            text: "I would tell you which one is correct; unfortunately the file that contained that information is " +
-                "corrupted and gone. So we are doing this by trial and error.",
-            next: "tutorial_intro_7",
-        },
-
-        tutorial_intro_7: {
-            type: "dialogue",
-            speaker: "TUTORIAL",
-            portrait: "tutorial",
-            text: "One more thing before I release you into the dating pool; press I at any time to open your character " +
-                "log. It tracks what you have learned about each bachelor, their hearts, their likes, the usual. " +
-                "Use it.",
-            next: "tutorial_intro_8",
-        },
-
-        tutorial_intro_8: {
             type: "choice",
             speaker: "TUTORIAL",
             portrait: "tutorial",
-            text: "Any questions before we boot Day One, or shall we get this catastrophe underway?",
+            text: "Press 'I' anytime to open your character log to track your progress. Any questions before we boot Day One?",
             choices: [
                 { text: "Who are you?",           next: "tutorial_q_who",    points: { tutorial: 2 } },
                 { text: "How do I know you're not lying?", next: "tutorial_q_trust",  points: { tutorial: 2 } },

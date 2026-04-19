@@ -16,6 +16,13 @@ const GameState = {
         duc: false,
         muhammed: false,
         mikhail: false,
+        tutorial: false,
+    },
+    // how many times has the player visited each character? (1 based for dialogue flow)
+    visitCounts: {
+        duc: 0,
+        muhammed: 0,
+        mikhail: 0,
     },
     // who did the player visit today? prevents picking the same bachelor twice in one day
     visitedToday: null,
@@ -76,7 +83,8 @@ const GameState = {
         this.playerName = "UNKNOWN";
         this.currentDay = 1;
         this.relationshipPoints = { duc: 0, muhammed: 0, mikhail: 0, tutorial: 0 };
-        this.metCharacters = { duc: false, muhammed: false, mikhail: false };
+        this.metCharacters = { duc: false, muhammed: false, mikhail: false, tutorial: false };
+        this.visitCounts = { duc: 0, muhammed: 0, mikhail: 0 };
         this.visitedToday = null;
         this.flagsGame = {};
         this.flagsDay = {};

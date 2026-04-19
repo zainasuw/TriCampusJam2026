@@ -1,12 +1,3 @@
-// character sheet overlay Triggered by pressing I from anywhere in gameplay
-// left panel: grid of characters (known ones show portrait, unknown show ???).
-// Right panel: selected character's details (name, hearts, likes, dislikes, notes).
-// Press I or ESC to close.
-
-// this scene sits on top of whatever scene is below it, we re-draw the below
-// scene first, then overlay this. the below scene is paused while this is open
-// its update is skipped by checking a GameEngine-level flag
-
 const CHARACTER_DATA = {
     duc: {
         displayName: "ĐỨC",
@@ -27,10 +18,10 @@ const CHARACTER_DATA = {
         notes: "His dialogue has syntax errors. On purpose?",
     },
     tutorial: {
-        displayName: "???",
-        likes: "???",
-        dislikes: "???",
-        notes: "Guide subroutine. Corrupted. Hides things.",
+        displayName: "TUTORIAL",
+        likes: "????",
+        dislikes: "????",
+        notes: "....I am just here to explain the buttons. Pay no attention to me. Focus on the other bachelors, please.",
         isTutorial: true,
     },
 };
@@ -60,17 +51,17 @@ class CharacterSheetScene {
         // layout (canvas is 1920x1080)
         // detail panel is wide when no character met; narrow when one is selected
         // Matches the resize pattern in the reference art.
-        this.LEFT  = { x: 60,  y: 80,  w: 1180, h: 920 };
-        this.RIGHT = { x: 1270, y: 80, w: 590,  h: 920 };
+        this.LEFT  = { x: 60,  y: 130,  w: 1180, h: 870 };
+        this.RIGHT = { x: 1270, y: 130, w: 590,  h: 870 };
 
-        // 4-column grid for character slots
-        this.GRID_COLS = 4;
+        // 2 column grid for character slots (4 characters total)
+        this.GRID_COLS = 2;
         this.GRID_ROWS = 2;
-        this.SLOT_SIZE = 200;
-        this.SLOT_GAP  = 40;
-        this.GRID_START = { x: 140, y: 220 };
+        this.SLOT_SIZE = 250;
+        this.SLOT_GAP  = 60;
+        this.GRID_START = { x: 360, y: 280 };
 
-        this.SLOT_KEYS = ["duc", "muhammed", "mikhail", null, null, null, null, null];
+        this.SLOT_KEYS = ["duc", "muhammed", "mikhail", "tutorial"];
     }
 
     _onKey(e) {
@@ -163,7 +154,7 @@ class CharacterSheetScene {
         ctx.fillStyle = "#ff4fa0";
         ctx.shadowColor = "rgba(255,80,160,0.6)";
         ctx.shadowBlur = 22;
-        ctx.fillText("CHARACTERS", W / 2, 100);
+        ctx.fillText("CHARACTERS", W / 2, 70);
         ctx.shadowBlur = 0;
 
         // left panel background
@@ -222,15 +213,17 @@ class CharacterSheetScene {
         if (known) {
             // generic silhouette (circle + shoulder arc)
             ctx.fillStyle = "#d18ebb";
+            const cx = r.x + r.w / 2;
+            const cy = r.y + r.h * 0.5;
             ctx.beginPath();
-            ctx.arc(r.x + r.w / 2, r.y + r.h * 0.42, 38, 0, Math.PI * 2);
+            ctx.arc(cx, cy - 40, 35, 0, Math.PI * 2);
             ctx.fill();
             ctx.beginPath();
-            ctx.ellipse(r.x + r.w / 2, r.y + r.h * 0.85, 58, 32, 0, Math.PI, 0, true);
+            ctx.ellipse(cx, cy, 60, 90, 0, Math.PI, 0, true);
             ctx.fill();
         } else {
             ctx.fillStyle = "#8a7a92";
-            ctx.font = "bold 48px 'The Bold Font', serif";
+            ctx.font = "bold 64px 'The Bold Font', serif";
             ctx.fillText("?", r.x + r.w / 2, r.y + r.h / 2);
         }
 
@@ -274,16 +267,19 @@ class CharacterSheetScene {
         ctx.textBaseline = "top";
 
         // portrait placeholder (square with silhouette)
-        const px = r.x + 30, py = r.y + 30, ps = 180;
+        const px = r.x + 30, py = r.y + 30, ps = 220;
         ctx.fillStyle = "#f5d8ea";
         this._roundRect(ctx, px, py, ps, ps, 14);
         ctx.fill();
+
+        const cx = px + ps / 2;
+        const cy = py + ps * 0.5;
         ctx.fillStyle = "#d18ebb";
         ctx.beginPath();
-        ctx.arc(px + ps / 2, py + ps * 0.42, 38, 0, Math.PI * 2);
+        ctx.arc(cx, cy - 40, 35, 0, Math.PI * 2);
         ctx.fill();
         ctx.beginPath();
-        ctx.ellipse(px + ps / 2, py + ps * 0.85, 58, 32, 0, Math.PI, 0, true);
+        ctx.ellipse(cx, cy, 60, 90, 0, Math.PI, 0, true);
         ctx.fill();
 
         // right of portrait: name, friendship hearts

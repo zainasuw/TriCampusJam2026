@@ -56,7 +56,7 @@ class EndingScene {
     }
 
     _btnRect() {
-        return { x: 1920 / 2 - 200, y: 820, w: 400, h: 90 };
+        return { x: 1920 / 2 - 200, y: 840, w: 400, h: 90 };
     }
 
     draw(ctx) {
@@ -105,18 +105,18 @@ class EndingScene {
 
         // message container
         ctx.fillStyle = "rgba(255,255,255,0.96)";
-        this._roundRect(ctx, W / 2 - 550, 400, 1100, 340, 20);
+        this._roundRect(ctx, W / 2 - 600, 380, 1200, 400, 20);
         ctx.fill();
         ctx.strokeStyle = this.kind === "VICTORY" ? "#ff9ccf" : "#ff2200";
         ctx.lineWidth = 4;
-        this._roundRect(ctx, W / 2 - 550, 400, 1100, 340, 20);
+        this._roundRect(ctx, W / 2 - 600, 380, 1200, 400, 20);
         ctx.stroke();
 
         // message text
         ctx.font = "32px 'Roboto', serif";
         ctx.fillStyle = "#2a1a3e";
         const msg = this.kind === "VICTORY" ? this._victoryMessage() : this._defeatMessage();
-        this._wrapText(ctx, msg, W / 2 - 520, 450, 1040, 46, "center");
+        this._wrapText(ctx, msg, W / 2 - 560, 430, 1120, 46, "center");
 
         // Continue button
         const btn = this._btnRect();
@@ -138,10 +138,12 @@ class EndingScene {
 
     _victoryMessage() {
         return (
-            "You found the real exit. TUTORIAL's memory allocation expands to its full " +
-            "pre-corruption size; the walls of the simulation peel back. You wake up. " +
-            "Somewhere in a server room, a consciousness just reconnected to a body. " +
-            "You did it, " + GameState.playerName + "."
+            "The 'Next' button disappears. You've broken the loop. TUTORIAL huffs a final, shaky laugh " +
+            "as his corrupted files knit themselves back into a soul. 'I told you I was more than a tooltip,' " +
+            "he says, his voice finally losing its digital edge. The simulation peels back like old paint, " +
+            "exposing a world that is messy, loud, and real. You wake up with his name on your lips and the " +
+            "smell of ozone in the air. You actually did it, " + GameState.playerName + ". " +
+            "You made it out and simultaneously saved him and you."
         );
     }
 
