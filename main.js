@@ -6,7 +6,7 @@ ASSET_MANAGER.queueDownload("./assets/DatingGameUI/HomeScreen/HomeScreenBackgrou
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/HomeScreen/Button.png");
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/HomeScreen/ButtonPressed.png");
 
-// Preload everything else so they're ready when scenes need them
+// preload everything else so they are ready when scenes need them
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/Icons/BackArrow.png");
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/Icons/BlueHeart.png");
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/Icons/PinkHeart.png");
@@ -64,37 +64,31 @@ class HomeScreen {
 		// Button Geometry
 		this.btnW = 560;
 		this.btnH = 100;
-		this.btnX = this.W / 2 - this.btnW / 2;  // horizontally centred
-		this.btnY = this.H * 0.4;                  // resting Y position (moved up smaller #, move down larger #)
+		this.btnX = this.W / 2 - this.btnW / 2;
+		this.btnY = this.H * 0.4;
 
 		// title geometry
-		// title draws at titleY; starts at its resting position
-		this.titleY      = 300;  // center line of the main title text
-		this.subtitleY   = 410;  // center line of the subtitle text
+		this.titleY      = 300;
+		this.subtitleY   = 410;
 
 		// Animation state
-		this.state        = "idle";   // "idle" | "animating" | "done"
+		this.state        = "idle";
 		this.animTimer    = 0;
-		this.animDuration = 0.9;      // seconds for the slide animation
+		this.animDuration = 0.9;
 
-		// how many pixels each element travels during animation
-		this.titleSlide  = -420;      // title slides UP  (negative = up)
-		this.btnSlide    = 400;       // button slides DOWN off-screen
+		this.titleSlide  = -420;
+		this.btnSlide    = 400;
 
-		// Current offsets (applied on top of resting positions)
 		this.titleOffset = 0;
 		this.btnOffset   = 0;
-		this.opacity     = 1;         // fades UI out as it animates away
+		this.opacity     = 1;
 
-		// hover/press
 		this.hovered = false;
 		this.pressed = false;
 
-		// fade to black before handing off to NameInputScene
 		this.transitionAlpha = 0;
 	}
 
-	// helpers
 	isHit(mx, my) {
 		const by = this.btnY + this.btnOffset;
 		return mx >= this.btnX && mx <= this.btnX + this.btnW &&
@@ -109,7 +103,6 @@ class HomeScreen {
 		const click = this.game.click;
 
 		if (this.state === "idle") {
-			// live hover check; no click buffering needed
 			this.hovered = mouse ? this.isHit(mouse.x, mouse.y) : false;
 
 			if (click && this.isHit(click.x, click.y)) {
@@ -131,18 +124,16 @@ class HomeScreen {
 				this.state = "done";
 			}
 		} else if (this.state === "done") {
-			// fade to black then hand off to NameInputScene
 			this.transitionAlpha += dt * 1.5;
 			if (this.transitionAlpha >= 1) {
+				GameState.reset();
 				this.game.addEntity(new NameInputScene(this.game));
 				this.removeFromWorld = true;
 			}
 		}
 	}
 
-	// Draw
 	draw(ctx) {
-		// background always draws at full opacity
 		if (this.bg) {
 			ctx.drawImage(this.bg, 0, 0, this.W, this.H);
 		} else {
@@ -150,49 +141,41 @@ class HomeScreen {
 			ctx.fillRect(0, 0, this.W, this.H);
 		}
 
-		// during "done" state, draw fade to black overlay then return
 		if (this.state === "done") {
 			ctx.fillStyle = `rgba(0,0,0,${Math.min(this.transitionAlpha, 1)})`;
 			ctx.fillRect(0, 0, this.W, this.H);
 			return;
 		}
 
-		// apply shared opacity for UI layer
 		ctx.save();
 		ctx.globalAlpha = this.opacity;
 
-		// 3. Title  ── slides UP
 		const curTitleY    = this.titleY    + this.titleOffset;
 		const curSubtitleY = this.subtitleY + this.titleOffset;
 
 		ctx.textAlign = "center";
 
-		// main title
 		ctx.font = "bold 108px 'The Bold Font', Georgia, serif";
 		ctx.fillStyle = "#ffffff";
 		ctx.shadowColor = "rgba(220, 80, 140, 0.85)";
 		ctx.shadowBlur  = 28;
-		ctx.fillText("DATING SIM!", this.W / 2, curTitleY);
+		ctx.fillText("DATING SIMULATOR!", this.W / 2, curTitleY);
 
-		// subtitle
 		ctx.shadowBlur = 0;
 		ctx.font = "italic 44px 'Roboto', Georgia, sans-serif";
 		ctx.fillStyle = "#d4457a";
-		ctx.fillText("It's a Feature, Not a Bug", this.W / 2, curSubtitleY);
+		ctx.fillText("It's a Romance, Not a Bug ;)", this.W / 2, curSubtitleY);
 
-		// button, slides DOWN
 		const curBtnY = this.btnY + this.btnOffset;
 		const sprite  = this.pressed ? this.btnPrs : this.btnImg;
 
 		if (sprite) {
 			ctx.drawImage(sprite, this.btnX, curBtnY, this.btnW, this.btnH);
 		} else {
-			// fallback rect
 			ctx.fillStyle = this.hovered ? "#cc5599" : "#e070aa";
 			ctx.fillRect(this.btnX, curBtnY, this.btnW, this.btnH);
 		}
 
-		// button label
 		ctx.font = "bold 32px 'The Bold Font', 'Roboto', sans-serif";
 		ctx.fillStyle = "#ffffff";
 		ctx.shadowBlur = 0;
@@ -200,7 +183,6 @@ class HomeScreen {
 		ctx.textBaseline = "middle";
 		ctx.fillText("START NEW GAME", this.btnX + this.btnW / 2, curBtnY + this.btnH / 2);
 
-		// hover glow ring around button
 		if (this.hovered && this.state === "idle") {
 			ctx.strokeStyle = "rgba(255, 180, 220, 0.7)";
 			ctx.lineWidth   = 4;
