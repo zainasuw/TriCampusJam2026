@@ -124,6 +124,7 @@ class CharacterSheetScene {
                 if (click.x >= r.x && click.x <= r.x + r.w &&
                     click.y >= r.y && click.y <= r.y + r.h) {
                     if (key && GameState.metCharacters[key]) {
+                        MUSIC.playClick(); 
                         this.selectedKey = key;
                     }
                     this.game.click = null;

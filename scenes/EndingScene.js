@@ -45,6 +45,7 @@ class EndingScene {
             mouse.y >= btn.y && mouse.y <= btn.y + btn.h;
 
         if (click && this.continueHovered && !this.done) {
+            MUSIC.playClick();  
             this.done = true;
             this.game.click = null;
             // Reset game state and go back to title screen
