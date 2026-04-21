@@ -55,6 +55,20 @@ class GameEngine {
             this.mouse = getXandY(e);
         });
 
+		this.ctx.canvas.addEventListener("mousedown", e => {
+            let p = getXandY(e);
+            this.mouse = p;
+            this.mouseDown = true;
+            if (typeof MUSIC !== 'undefined') {
+                MUSIC.unlock();
+                MUSIC.playClick();
+            }
+        });
+
+        this.ctx.canvas.addEventListener("mouseup", e => {
+            this.mouseDown = false;
+        });
+
         this.ctx.canvas.addEventListener("click", e => {
             if (this.options.debugging) {
                 console.log("CLICK", getXandY(e));
@@ -99,7 +113,8 @@ class GameEngine {
     update() {
         let entitiesCount = this.entities.length;
 
-        for (let i = 0; i < entitiesCount; i++) {
+        // run updates backwards so newest overlays get first dibs on input processing
+        for (let i = entitiesCount - 1; i >= 0; i--) {
             let entity = this.entities[i];
 
             if (!entity.removeFromWorld) {
