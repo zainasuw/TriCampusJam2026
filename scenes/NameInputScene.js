@@ -55,6 +55,9 @@ class NameInputScene {
 
         this.keyHandler = (e) => this._onKey(e);
         document.addEventListener("keydown", this.keyHandler);
+
+        // start typing SFX loop. it will be stopped the moment the typewriter finishes, or user skips with a click
+        MUSIC.startTyping();
     }
 
     _onKey(e) {
@@ -87,6 +90,7 @@ class NameInputScene {
         if (this.phase === "typing_boot") {
             // click to skip
             if (this.game.click) {
+                
                 this.typedChars = this.fullText.length;
                 this.game.click = null;
             }
@@ -99,6 +103,8 @@ class NameInputScene {
             if (this.typedChars >= this.fullText.length) {
                 this.phase = "await_input";
                 this.postTypePause = 0;
+                // Typewriter is done — kill the typing SFX loop.
+                MUSIC.stopTyping();
             }
         } else if (this.phase === "await_input") {
             this.postTypePause += dt;
@@ -112,8 +118,11 @@ class NameInputScene {
             this.fadeAlpha += dt * 2;
             if (this.fadeAlpha >= 1) {
                 document.removeEventListener("keydown", this.keyHandler);
+                MUSIC.stopTyping(); // safety: make sure it's off before leaving
+                
+                MUSIC.playGameMusic();
+                
                 GameState.playerName = this.playerName.trim() || "USER";
-                // Jump straight into the Tutorial intro (which runs through DialogueScene).
                 this.game.addEntity(new DialogueScene(this.game, "tutorial_intro_1"));
                 this.removeFromWorld = true;
             }

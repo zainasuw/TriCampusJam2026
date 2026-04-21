@@ -1,6 +1,5 @@
 // BSOD boot transition scene. Used between days to reinforce the "simulation
 // crashing and rebooting vibe. Typewriter effect, then auto-advances to the
-// Tutorial hub (DialogueScene at tutorial_morning)
 
 class BootDayScene {
     constructor(game, nextNodeId) {
@@ -47,6 +46,9 @@ class BootDayScene {
 
         this.cursorBlink = 0;
         this.cursorVisible = true;
+
+        // typing SFX while the BSOD types itself out
+        MUSIC.startTyping();
     }
 
     update() {
@@ -62,8 +64,8 @@ class BootDayScene {
             if (this.fadeAlpha <= 0) this.fadingIn = false;
         }
 
-        // skip on click
-        if (this.game.click && this.phase === "typing") { 
+        if (this.game.click && this.phase === "typing") {
+            
             this.typedChars = this.fullText.length;
             this.game.click = null;
         }
@@ -74,17 +76,21 @@ class BootDayScene {
                 this.typingAccum -= 1;
                 this.typedChars++;
             }
-            if (this.typedChars >= this.fullText.length) this.phase = "hold";
+            if (this.typedChars >= this.fullText.length) {
+                this.phase = "hold";
+                MUSIC.stopTyping();
+            }
         } else if (this.phase === "hold") {
             this.holdTimer += dt;
             if (this.holdTimer >= this.holdDuration || this.game.click) {
-                //MUSIC.playClick();  
+                if (this.game.click) 
                 this.game.click = null;
                 this.phase = "fading_out";
             }
         } else if (this.phase === "fading_out") {
             this.fadeOut += dt * 1.8;
             if (this.fadeOut >= 1) {
+                MUSIC.stopTyping(); // safety
                 this.game.addEntity(new DialogueScene(this.game, this.nextNodeId));
                 this.removeFromWorld = true;
             }
