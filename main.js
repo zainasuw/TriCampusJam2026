@@ -1,5 +1,6 @@
 const gameEngine = new GameEngine();
 const ASSET_MANAGER = new AssetManager();
+const MUSIC = new Music(); 
 
 // Queue assets
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/HomeScreen/HomeScreenBackground.jpg");
@@ -123,6 +124,8 @@ class HomeScreen {
 			this.hovered = mouse ? this.isHit(mouse.x, mouse.y) : false;
 
 			if (click && this.isHit(click.x, click.y)) {
+				MUSIC.playClick(); 
+				MUSIC.unlock();    
 				this.pressed = true;
 				this.state   = "animating";
 				this.game.click = null;

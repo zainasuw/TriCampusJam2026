@@ -63,7 +63,7 @@ class BootDayScene {
         }
 
         // skip on click
-        if (this.game.click && this.phase === "typing") {
+        if (this.game.click && this.phase === "typing") { 
             this.typedChars = this.fullText.length;
             this.game.click = null;
         }
@@ -78,6 +78,7 @@ class BootDayScene {
         } else if (this.phase === "hold") {
             this.holdTimer += dt;
             if (this.holdTimer >= this.holdDuration || this.game.click) {
+                //MUSIC.playClick();  
                 this.game.click = null;
                 this.phase = "fading_out";
             }

@@ -258,6 +258,7 @@ class DialogueScene {
                 }
             }
             if (click) {
+                MUSIC.playClick(); 
                 this.systemLineIndex = this.systemLines.length;
                 this.phase = "system_pause";
                 this.pauseTimer = 0;
@@ -269,7 +270,8 @@ class DialogueScene {
         if (this.phase === "system_pause") {
             this.pauseTimer += dt;
             if (this.pauseTimer >= 1.0 || click) {
-                if (click) this.game.click = null;
+                if (click) MUSIC.playClick(); 
+                    this.game.click = null;
                 this.loadNode(this.pendingNextForSystem);
             }
             return;
@@ -321,6 +323,7 @@ class DialogueScene {
 
             if (this.phase === "typing" || justFinishedTyping) {
                 // skip typing, firmly stopping at idle and safely eating the click
+                MUSIC.playClick(); 
                 this.charIndex = this.fullText.length;
                 this.displayText = this.fullText;
                 this.phase = "idle";
@@ -333,6 +336,7 @@ class DialogueScene {
                     this.muhammedLoopPressed++;
                     if (this.muhammedLoopPressed < 3) {
                         // pulse the next button to show it was pressed
+                        MUSIC.playClick(); 
                         this.nextBtnPressed = true;
                         setTimeout(() => { this.nextBtnPressed = false; }, 120);
                         return;
@@ -344,6 +348,7 @@ class DialogueScene {
                 const onNext = cx >= n.x && cx <= n.x + n.w && cy >= n.y && cy <= n.y + n.h;
                 const onBox  = cx >= d.x && cx <= d.x + d.w && cy >= d.y && cy <= d.y + d.h;
                 if (onNext || onBox) {
+                    MUSIC.playClick(); 
                     if (onNext) {
                         this.nextBtnPressed = true;
                         setTimeout(() => { this.nextBtnPressed = false; }, 120);
@@ -364,6 +369,7 @@ class DialogueScene {
                     const r = this._choiceRect(i);
                     if (click.x >= r.x && click.x <= r.x + r.w &&
                         click.y >= r.y && click.y <= r.y + r.h) {
+                        MUSIC.playClick(); 
                         this.replyBtnPressedIndex = i;
                         const choice = this.currentChoices[i];
 
