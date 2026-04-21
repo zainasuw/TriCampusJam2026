@@ -39,45 +39,22 @@ ASSET_MANAGER.queueDownload("./assets/DatingGameUI/VictoryOrDefeat/ContinueBtn.p
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/VictoryOrDefeat/ContinueBtnPressed.png");
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/Background.jpg");
 
-// Character sprites — girl1 (player character)
-ASSET_MANAGER.queueDownload("./assets/characters/girl1/Natu.png");
-ASSET_MANAGER.queueDownload("./assets/characters/girl1/Smiling.png");
-ASSET_MANAGER.queueDownload("./assets/characters/girl1/Angry.png");
-ASSET_MANAGER.queueDownload("./assets/characters/girl1/Sad.png");
-ASSET_MANAGER.queueDownload("./assets/characters/girl1/Sad_tears.png");
-ASSET_MANAGER.queueDownload("./assets/characters/girl1/Surprised.png");
-ASSET_MANAGER.queueDownload("./assets/characters/girl1/Close_blushing.png");
-ASSET_MANAGER.queueDownload("./assets/characters/girl1/open_blushing.png");
-ASSET_MANAGER.queueDownload("./assets/characters/girl1/neutral_pose.png");
-ASSET_MANAGER.queueDownload("./assets/characters/girl1/closed_eye_pose.png");
-ASSET_MANAGER.queueDownload("./assets/characters/girl1/Face.png");
-
-// Character sprites — guy1 (Đức)
-ASSET_MANAGER.queueDownload("./assets/characters/guy1/Neutral.png");
-ASSET_MANAGER.queueDownload("./assets/characters/guy1/Angry.png");
-ASSET_MANAGER.queueDownload("./assets/characters/guy1/Sad.png");
-ASSET_MANAGER.queueDownload("./assets/characters/guy1/Surprised.png");
-ASSET_MANAGER.queueDownload("./assets/characters/guy1/Relaxed.png");
-ASSET_MANAGER.queueDownload("./assets/characters/guy1/Blink.png");
+const GUY_EXPRESSIONS = ["Neutral", "Angry", "Sad", "Surprised", "Relaxed", "Blink"];
+for (const expr of GUY_EXPRESSIONS) {
+	ASSET_MANAGER.queueDownload(`./assets/characters/guy1/${expr}.png`);
+	ASSET_MANAGER.queueDownload(`./assets/characters/guy2/${expr}.png`);
+	ASSET_MANAGER.queueDownload(`./assets/characters/guy3/${expr}.png`);
+}
 ASSET_MANAGER.queueDownload("./assets/characters/guy1/Face.png");
-
-// Character sprites — guy2 (Mikhail)
-ASSET_MANAGER.queueDownload("./assets/characters/guy2/Neutral.png");
-ASSET_MANAGER.queueDownload("./assets/characters/guy2/Angry.png");
-ASSET_MANAGER.queueDownload("./assets/characters/guy2/Sad.png");
-ASSET_MANAGER.queueDownload("./assets/characters/guy2/Surprised.png");
-ASSET_MANAGER.queueDownload("./assets/characters/guy2/Relaxed.png");
-ASSET_MANAGER.queueDownload("./assets/characters/guy2/Blink.png");
 ASSET_MANAGER.queueDownload("./assets/characters/guy2/Face.png");
-
-// Character sprites — guy3 (Muhammed)
-ASSET_MANAGER.queueDownload("./assets/characters/guy3/Neutral.png");
-ASSET_MANAGER.queueDownload("./assets/characters/guy3/Angry.png");
-ASSET_MANAGER.queueDownload("./assets/characters/guy3/Sad.png");
-ASSET_MANAGER.queueDownload("./assets/characters/guy3/Surprised.png");
-ASSET_MANAGER.queueDownload("./assets/characters/guy3/Relaxed.png");
-ASSET_MANAGER.queueDownload("./assets/characters/guy3/Blink.png");
 ASSET_MANAGER.queueDownload("./assets/characters/guy3/Face.png");
+
+const GIRL_EXPRESSIONS = ["Natu", "Smiling", "Angry", "Sad", "Sad_tears",
+	"Surprised", "neutral_pose", "Close_blushing", "open_blushing", "FullBlink", "BaseLine"];
+for (const expr of GIRL_EXPRESSIONS) {
+	ASSET_MANAGER.queueDownload(`./assets/characters/girl1/${expr}.png`);
+}
+ASSET_MANAGER.queueDownload("./assets/characters/girl1/Face.png");
 
 ASSET_MANAGER.downloadAll(() => {
 	const canvas = document.getElementById("gameWorld");
