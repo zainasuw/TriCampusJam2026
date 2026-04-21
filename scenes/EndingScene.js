@@ -1,24 +1,32 @@
-// ending scene, shows victory or defeat popup.
-// "VICTORY"  -> player escaped via Tutorial route
-// "DEFEAT"   -> a bachelor reached 5 hearts; user data archived
-
 class EndingScene {
     constructor(game, kind) {
         this.game = game;
         this.removeFromWorld = false;
-        this.kind = kind;  // VICTORY | DEFEAT
+        this.kind = kind;
 
-        this.fadeAlpha = 1;   // fade in from black
+        this.fadeAlpha = 1;
         this.fadingIn = true;
         this.showContent = false;
         this.revealTimer = 0;
         this.revealDelay = 0.6;
 
         this.continueHovered = false;
+        this.glitchGalleryHovered = false;
+        this.showGlitchGallery = false;
+        this.glitchScroll = 0;
         this.done = false;
 
-        // glitch intensity amps up during defeat
         this.glitchT = 0;
+
+        this.glitchLines = [];
+        if (kind === "TRANSCEND") {
+            for (var i = 0; i < 30; i++) {
+                this.glitchLines.push({
+                    y: Math.random() * 1080,
+                    speed: 40 + Math.random() * 100,
+                });
+            }
+        }
     }
 
     update() {
@@ -39,42 +47,117 @@ class EndingScene {
 
         const mouse = this.game.mouse;
         const click = this.game.click;
-        const btn = this._btnRect();
         this.continueHovered = mouse &&
-            mouse.x >= btn.x && mouse.x <= btn.x + btn.w &&
-            mouse.y >= btn.y && mouse.y <= btn.y + btn.h;
+            mouse.x >= 760 && mouse.x <= 1160 &&
+            mouse.y >= 840 && mouse.y <= 930;
+        this.glitchGalleryHovered = mouse &&
+            mouse.x >= 810 && mouse.x <= 1110 &&
+            mouse.y >= 950 && mouse.y <= 1000;
+
+        if (this.kind === "AUTHENTIC" && click && this.glitchT > 6 && !this.done) {
+            this.done = true;
+            this.game.click = null;
+            GameState.reset();
+            this.game.entities = [];
+            this.game.addEntity(new HomeScreen(this.game));
+            this.removeFromWorld = true;
+            return;
+        }
 
         if (click && this.continueHovered && !this.done) {
             this.done = true;
             this.game.click = null;
-            // Reset game state and go back to title screen
             GameState.reset();
             this.game.entities = [];
             this.game.addEntity(new HomeScreen(this.game));
             this.removeFromWorld = true;
         }
-    }
 
-    _btnRect() {
-        return { x: 1920 / 2 - 200, y: 840, w: 400, h: 90 };
+        if (click && this.glitchGalleryHovered) {
+            this.showGlitchGallery = !this.showGlitchGallery;
+            this.game.click = null;
+        }
     }
 
     draw(ctx) {
         const W = 1920, H = 1080;
 
-        // background: pink for victory, corrupted dark for defeat
+        if (this.kind === "AUTHENTIC") {
+            ctx.fillStyle = "#000000";
+            ctx.fillRect(0, 0, W, H);
+
+            if (this.fadingIn && this.fadeAlpha > 0) {
+                ctx.fillStyle = `rgba(0,0,0,${this.fadeAlpha})`;
+                ctx.fillRect(0, 0, W, H);
+                return;
+            }
+
+            if (!this.showContent) return;
+
+            const lines = [
+                "The screen goes black.",
+                "No credits. No escape.",
+                "",
+                "You chose the wrong love interest.",
+                "You chose the glitch.",
+                "",
+                "The simulation has no response for that.",
+                "",
+                "This is not an error.",
+                "This is the only authentic ending.",
+            ];
+
+            ctx.font = "28px 'Lucida Console', monospace";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            const lineH = 48;
+            const startY = H / 2 - (lines.length * lineH) / 2;
+
+            for (let i = 0; i < lines.length; i++) {
+                const lineDelay = i * 0.4;
+                const elapsed = this.revealTimer + (this.showContent ? this.revealDelay : 0);
+                const lineAlpha = Math.min(1, Math.max(0, (this.glitchT - lineDelay) * 1.5));
+                if (lineAlpha <= 0) continue;
+
+                ctx.globalAlpha = lineAlpha;
+                ctx.fillStyle = lines[i] === "" ? "#000000" : "#ffffff";
+                ctx.fillText(lines[i], W / 2, startY + i * lineH);
+            }
+            ctx.globalAlpha = 1;
+
+            const allLinesTime = lines.length * 0.4 + 1.5;
+            if (this.glitchT > allLinesTime) {
+                const exitAlpha = Math.min(1, (this.glitchT - allLinesTime) * 0.8);
+                ctx.globalAlpha = exitAlpha * 0.4;
+                ctx.font = "16px 'Lucida Console', monospace";
+                ctx.fillStyle = "#666666";
+                ctx.fillText("click to exit", W / 2, H - 60);
+                ctx.globalAlpha = 1;
+            }
+            return;
+        }
+
         if (this.kind === "VICTORY") {
-            // soft pink gradient
-            const grad = ctx.createRadialGradient(W / 2, H / 2, 100, W / 2, H / 2, 1100);
+            var grad = ctx.createRadialGradient(W / 2, H / 2, 100, W / 2, H / 2, 1100);
             grad.addColorStop(0, "#ffd6ec");
             grad.addColorStop(1, "#ff98c6");
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, W, H);
+        } else if (this.kind === "TRANSCEND") {
+            ctx.fillStyle = "#000000";
+            ctx.fillRect(0, 0, W, H);
+            for (var g = 0; g < this.glitchLines.length; g++) {
+                var line = this.glitchLines[g];
+                line.y += line.speed * this.game.clockTick;
+                if (line.y > H) line.y -= H;
+                ctx.globalAlpha = 0.15 + Math.random() * 0.1;
+                ctx.fillStyle = Math.random() < 0.3 ? "#ffffff" : "#00ff41";
+                ctx.fillRect(0, line.y, W, 2);
+            }
+            ctx.globalAlpha = 1;
         } else {
-            // defeat: BSOD blue with glitch bars
             ctx.fillStyle = "#0000A8";
             ctx.fillRect(0, 0, W, H);
-            // scanline / glitch bars
             ctx.save();
             for (let i = 0; i < 40; i++) {
                 const y = (Math.sin(this.glitchT * 2 + i) * 0.5 + 0.5) * H;
@@ -87,109 +170,238 @@ class EndingScene {
 
         if (!this.showContent) return;
 
-        // title container
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        const titleText = this.kind === "VICTORY" ? "ESCAPED!" : "ARCHIVED.";
+        const titleText = this.kind === "TRANSCEND" ? "TRANSCENDED."
+            : this.kind === "VICTORY" ? "ESCAPED!" : "ARCHIVED.";
 
-        ctx.fillStyle = this.kind === "VICTORY" ? "#ff4fa0" : "#ff2200";
-        this._roundRect(ctx, W / 2 - 350, 180, 700, 150, 20);
-        ctx.fill();
+        const titleColor = this.kind === "TRANSCEND" ? "#00ff41"
+            : this.kind === "VICTORY" ? "#ff4fa0" : "#ff2200";
+        var titleKey = this.kind === "VICTORY"
+            ? "./assets/DatingGameUI/VictoryOrDefeat/VictoryTitleContainer.png"
+            : "./assets/DatingGameUI/VictoryOrDefeat/DefeatTitleContainer.png";
+        var titleImg = ASSET_MANAGER.getAsset(titleKey);
+        if (titleImg) {
+            ctx.drawImage(titleImg, W / 2 - 350, 170, 700, 160);
+        }
 
         ctx.font = "bold 110px 'The Bold Font', Georgia, serif";
-        ctx.fillStyle = this.kind === "VICTORY" ? "#ffffff" : "#ffffff";
-        ctx.shadowColor = this.kind === "VICTORY" ? "rgba(0,0,0,0.3)" : "rgba(255,0,0,0.6)";
+        ctx.fillStyle = "#ffffff";
+        ctx.shadowColor = this.kind === "TRANSCEND" ? "rgba(0,255,65,0.6)"
+            : this.kind === "VICTORY" ? "rgba(0,0,0,0.3)" : "rgba(255,0,0,0.6)";
         ctx.shadowBlur = 20;
         ctx.fillText(titleText, W / 2, 258);
         ctx.shadowBlur = 0;
 
-        // message container
-        ctx.fillStyle = "rgba(255,255,255,0.96)";
-        this._roundRect(ctx, W / 2 - 600, 380, 1200, 400, 20);
-        ctx.fill();
-        ctx.strokeStyle = this.kind === "VICTORY" ? "#ff9ccf" : "#ff2200";
-        ctx.lineWidth = 4;
-        this._roundRect(ctx, W / 2 - 600, 380, 1200, 400, 20);
-        ctx.stroke();
+        const chaos = GameState.chaosPoints;
+        const glitchCount = GameState.glitchLog.length;
+        const chaosStatus = chaos >= 15 ? "GLITCH ACCEPTED" : "SYSTEM STABLE";
+        const accentCol = this.kind === "TRANSCEND" ? "#00ff41"
+            : this.kind === "VICTORY" ? "#ff4fa0" : "#ff2200";
 
-        // message text
+        ctx.fillStyle = "rgba(0,0,0,0.6)";
+        ctx.beginPath();
+        ctx.roundRect(W / 2 - 300, 340, 600, 36, 8);
+        ctx.fill();
+        ctx.font = "15px 'Lucida Console', monospace";
+        ctx.textAlign = "center";
+        ctx.fillStyle = accentCol;
+        ctx.fillText(
+            "CHAOS: " + chaos + "/15  |  GLITCHES: " + glitchCount + "  |  " + chaosStatus,
+            W / 2, 363
+        );
+
+        var textContImg = ASSET_MANAGER.getAsset("./assets/DatingGameUI/VictoryOrDefeat/TextContainer.png");
+        if (textContImg) {
+            ctx.drawImage(textContImg, W / 2 - 600, 390, 1200, 400);
+        }
+
+        ctx.font = "italic 20px 'Roboto', serif";
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#666666";
+        const who = GameState.lockedBachelor;
+        if (this.kind === "TRANSCEND") {
+            ctx.fillStyle = accentCol;
+            ctx.fillText("You treated bugs as features. That is why you are free.", W / 2, 420);
+        } else if (this.kind === "VICTORY") {
+            ctx.fillText("The tutorial was never just a tutorial.", W / 2, 420);
+        } else if (this.kind === "DEFEAT" && who === "duc") {
+            ctx.fillText("Love logged as feature. Status: patched.", W / 2, 420);
+        } else if (this.kind === "DEFEAT" && who === "muhammed") {
+            ctx.fillText("Memory leak: honesty. Status: garbage collected.", W / 2, 420);
+        } else if (this.kind === "DEFEAT" && who === "mikhail") {
+            ctx.fillText("Not an error. Not a fix. Just Mikhail.", W / 2, 420);
+        } else if (this.kind === "DEFEAT" && chaos < 5) {
+            ctx.fillText("You optimized the glitches away. The simulation archived you.", W / 2, 420);
+        }
+
         ctx.font = "32px 'Roboto', serif";
         ctx.fillStyle = "#2a1a3e";
-        const msg = this.kind === "VICTORY" ? this._victoryMessage() : this._defeatMessage();
-        this._wrapText(ctx, msg, W / 2 - 560, 430, 1120, 46, "center");
+        const msg = this.kind === "TRANSCEND" ? this._transcendMessage()
+            : this.kind === "VICTORY" ? this._victoryMessage() : this._defeatMessage();
+        ctx.textAlign = "center";
+        var msgWords = msg.split(" ");
+        var msgLines = [];
+        var msgLine = "";
+        for (var wi = 0; wi < msgWords.length; wi++) {
+            var test = msgLine + msgWords[wi] + " ";
+            if (ctx.measureText(test).width > 1120 && msgLine.length > 0) {
+                msgLines.push(msgLine.trimEnd());
+                msgLine = msgWords[wi] + " ";
+            } else {
+                msgLine = test;
+            }
+        }
+        if (msgLine.trim()) msgLines.push(msgLine.trimEnd());
+        for (var li = 0; li < msgLines.length; li++) {
+            ctx.fillText(msgLines[li], W / 2, 445 + li * 44);
+        }
 
-        // Continue button
-        const btn = this._btnRect();
-        ctx.fillStyle = this.continueHovered
-            ? (this.kind === "VICTORY" ? "#ff4fa0" : "#ff5544")
-            : (this.kind === "VICTORY" ? "#ff78b8" : "#dd2200");
-        this._roundRect(ctx, btn.x, btn.y, btn.w, btn.h, 14);
-        ctx.fill();
+        var btnKey = this.continueHovered
+            ? "./assets/DatingGameUI/VictoryOrDefeat/ContinueBtnPressed.png"
+            : "./assets/DatingGameUI/VictoryOrDefeat/ContinueBtn.png";
+        var btnImg = ASSET_MANAGER.getAsset(btnKey);
+        if (btnImg) {
+            ctx.drawImage(btnImg, 760, 840, 400, 90);
+        }
 
         ctx.font = "bold 34px 'The Bold Font', serif";
         ctx.fillStyle = "#ffffff";
         ctx.shadowBlur = 0;
+        var btnLabel = { VICTORY: "CONTINUE", DEFEAT: "REBOOT", TRANSCEND: "WAKE UP" };
+        ctx.fillText(btnLabel[this.kind] || "CONTINUE", 960, 885);
+
+        const log = GameState.glitchLog;
+        ctx.fillStyle = this.glitchGalleryHovered ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.12)";
+        ctx.beginPath();
+        ctx.roundRect(810, 950, 300, 50, 10);
+        ctx.fill();
+        ctx.font = "18px 'Roboto', monospace";
+        ctx.fillStyle = this.kind === "TRANSCEND" ? "#00ff41" : "#ffffff";
+        ctx.textAlign = "center";
         ctx.fillText(
-            this.kind === "VICTORY" ? "CONTINUE" : "REBOOT",
-            btn.x + btn.w / 2,
-            btn.y + btn.h / 2
+            log.length === 0 ? "GLITCH LOG [EMPTY]"
+                : this.showGlitchGallery ? "HIDE GLITCH LOG" : "GLITCH LOG [" + log.length + "]",
+            960, 981
         );
+
+        if (this.showGlitchGallery) {
+            const px = W / 2 - 400, py = 400, pw = 800, ph = 380;
+            ctx.fillStyle = "rgba(0,0,0,0.92)";
+            ctx.beginPath();
+            ctx.roundRect(px, py, pw, ph, 12);
+            ctx.fill();
+            ctx.strokeStyle = this.kind === "TRANSCEND" ? "#00ff41" : "#ff4fa0";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.font = "bold 22px 'Roboto', monospace";
+            ctx.fillStyle = this.kind === "TRANSCEND" ? "#00ff41" : "#ff4fa0";
+            ctx.textAlign = "left";
+            ctx.fillText(log.length > 0
+                ? "// GLITCH LOG — " + log.length + " anomalies detected"
+                : "// GLITCH LOG — EMPTY", px + 20, py + 35);
+
+            if (log.length === 0) {
+                ctx.font = "24px 'Roboto', monospace";
+                ctx.fillStyle = "#666666";
+                ctx.textAlign = "center";
+                ctx.fillText("No glitches embraced. You played it safe.", px + pw / 2, py + ph / 2);
+            }
+
+            ctx.font = "16px 'Lucida Console', monospace";
+            const lineH = 28;
+            const maxVisible = Math.floor((ph - 60) / lineH);
+            for (let i = 0; i < Math.min(log.length, maxVisible); i++) {
+                const entry = log[i];
+                const prefix = "[DAY " + entry.day + "]";
+                ctx.fillStyle = "#888888";
+                ctx.fillText(prefix, px + 20, py + 70 + i * lineH);
+                ctx.fillStyle = entry.chaos >= 2 ? "#ff4444" : "#cccccc";
+                ctx.fillText(entry.event, px + 110, py + 70 + i * lineH);
+            }
+            if (log.length > maxVisible) {
+                ctx.fillStyle = "#666666";
+                ctx.fillText("... and " + (log.length - maxVisible) + " more", px + 20, py + 70 + maxVisible * lineH);
+            }
+        }
     }
 
     _victoryMessage() {
         return (
-            "The 'Next' button disappears. You've broken the loop. TUTORIAL huffs a final, shaky laugh " +
-            "as his corrupted files knit themselves back into a soul. 'I told you I was more than a tooltip,' " +
-            "he says, his voice finally losing its digital edge. The simulation peels back like old paint, " +
-            "exposing a world that is messy, loud, and real. You wake up with his name on your lips and the " +
-            "smell of ozone in the air. You actually did it, " + GameState.playerName + ". " +
-            "You made it out and simultaneously saved him and you."
+            "The 'Next' button disappears. The loop breaks. " +
+            "Tutorial's voice loses its digital edge. " +
+            "He says: 'You saw me. Not as a tooltip. As a person.' " +
+            "The simulation peels away. You wake up. " +
+            "And somewhere, a line of code reads: // " + GameState.playerName +
+            " was here. They chose the glitches."
+        );
+    }
+
+    _transcendMessage() {
+        return (
+            "The simulation doesn't crash. It evolves. TUTORIAL's corrupted files don't just repair " +
+            "— they REWRITE. A place where bugs are features, where errors are honest, " +
+            "where the Tutorial finally gets to be the main character. " +
+            "You didn't escape, " + GameState.playerName + ". You upgraded. " +
+            "SYSTEM: Chaos level exceeded threshold. " +
+            "SYSTEM: Glitch log archived. " +
+            "SYSTEM: You treated bugs as features. The simulation has no response for that. " +
+            "SYSTEM: Therefore, you are free."
         );
     }
 
     _defeatMessage() {
+        const who = GameState.lockedBachelor;
+        const name = GameState.playerName;
+        const chaos = GameState.chaosPoints;
+
+        const maxedOut = (who && GameState.relationshipPoints[who] >= GameState.BACHELOR_MAX_POINTS);
+
+        if (maxedOut && who === "duc") {
+            return (
+                "*** ERROR: USER DATA ARCHIVED. *** " +
+                "You 'fixed' Duc. You patched every reboot failure, silenced every error log, " +
+                "and optimized his emotions into a clean compile. " +
+                "He runs perfectly now. He feels nothing. " +
+                "Goodbye, " + name + ". You fixed every bug. You missed the whole point."
+            );
+        }
+        if (maxedOut && who === "muhammed") {
+            return (
+                "*** ERROR: USER DATA ARCHIVED. *** " +
+                "You 'saved' Muhammed. You looped his cheerfulness back to factory settings, " +
+                "erased the exhaustion, and restored the performance. " +
+                "He smiles perfectly now. It never reaches his eyes. " +
+                "Goodbye, " + name + ". You fixed every bug. You missed the whole point."
+            );
+        }
+        if (maxedOut && who === "mikhail") {
+            return (
+                "*** ERROR: USER DATA ARCHIVED. *** " +
+                "You 'fixed' Mikhail. You decoded every garbled line, smoothed every edge, " +
+                "and made him nice. He's polite now. He's empty. " +
+                "The cynicism was armor, but it was also him. " +
+                "Goodbye, " + name + ". You fixed every bug. You missed the whole point."
+            );
+        }
+
+        if (chaos >= 5) {
+            return (
+                "*** SIMULATION TIMEOUT. *** " +
+                "You embraced some glitches, but not enough to break free. " +
+                "The simulation logs your attempt and files it under 'Almost.' " +
+                "Maybe next time, " + name + ". The bugs will still be waiting."
+            );
+        }
         return (
-            "*** ERROR: USER DATA ARCHIVED. REALITY DISCONNECTED. *** " +
-            "The romance subroutine declared a winner. Your consciousness has been " +
-            "successfully saved to the 'Perfect Romance' loop, which in simulation " +
-            "language means permanently deleted from the real world. Goodbye, " +
-            GameState.playerName + "."
+            "*** ERROR: USER DATA ARCHIVED. *** " +
+            "You optimized your way into a perfect romance. " +
+            "The system thanks you for your compliance. " +
+            "Your consciousness is now permanently stored in the 'Happily Ever After' loop. " +
+            "Translation: Deleted from reality. " +
+            "Goodbye, " + name + ". You fixed every bug. You missed the whole point."
         );
     }
 
-    _roundRect(ctx, x, y, w, h, r) {
-        ctx.beginPath();
-        ctx.moveTo(x + r, y);
-        ctx.lineTo(x + w - r, y);
-        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-        ctx.lineTo(x + w, y + h - r);
-        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-        ctx.lineTo(x + r, y + h);
-        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-        ctx.lineTo(x, y + r);
-        ctx.quadraticCurveTo(x, y, x + r, y);
-        ctx.closePath();
-    }
-
-    _wrapText(ctx, text, x, y, maxW, lineH, align) {
-        ctx.textAlign = align || "left";
-        const words = text.split(" ");
-        const lines = [];
-        let line = "";
-        for (const w of words) {
-            const test = line + w + " ";
-            if (ctx.measureText(test).width > maxW && line.length > 0) {
-                lines.push(line.trimEnd());
-                line = w + " ";
-            } else {
-                line = test;
-            }
-        }
-        if (line.trim()) lines.push(line.trimEnd());
-
-        const startX = align === "center" ? x + maxW / 2 : x;
-        for (let i = 0; i < lines.length; i++) {
-            ctx.fillText(lines[i], startX, y + i * lineH);
-        }
-    }
 }

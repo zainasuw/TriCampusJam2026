@@ -70,9 +70,9 @@ window.DIALOGUE_DATA = {
             portrait: "tutorial",
             text: "Press 'I' anytime to open your character log to track your progress. Any questions before we boot Day One?",
             choices: [
-                { text: "Who are you?",           next: "tutorial_q_who",    points: { tutorial: 2 } },
-                { text: "How do I know you're not lying?", next: "tutorial_q_trust",  points: { tutorial: 2 } },
-                { text: "WOOHOO! BRING IN THE MEN, BAAAABY!",           next: "tutorial_morning",  points: {} },
+                { text: "Who are you?",                          next: "tutorial_q_who",    points: { tutorial: 2 } },
+                { text: "How do I know you're not lying?",       next: "tutorial_q_trust",  points: { tutorial: 2 } },
+                { text: "WOOHOO! BRING IN THE MEN, BAAAABY!",   next: "tutorial_morning",  points: {} },
             ],
         },
 
@@ -94,6 +94,7 @@ window.DIALOGUE_DATA = {
                 "that has to count for something.",
             next: "tutorial_morning",
         },
+
         //  TUTORIAL HUB, morning briefing every day loops back here
         tutorial_morning: {
             type: "choice",
@@ -143,7 +144,7 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "TUTORIAL",
             portrait: "tutorial",
-            text: "Nobody asks the Tutorial how they feel, {PLAYER_NAME}. We’re just here to explain the buttons. " +
+            text: "Nobody asks the Tutorial how they feel, {PLAYER_NAME}. We're just here to explain the buttons. " +
                 "But for a second there, I felt less like a script and more like a person. Don't tell Mikhail; he'll " +
                 "think I'm stealing his 'self-aware' bit.",
             next: "tutorial_morning",
@@ -207,6 +208,7 @@ window.DIALOGUE_DATA = {
                 { text: "A solid six. Functioning.",               next: "duc_day1_logic_ok", points: { duc: 8 } },
                 { text: "Honestly? I feel scared and confused.",   next: "duc_day1_reboot",   points: { duc: 0 }, bug: "duc_reboot" },
                 { text: "Coffee is a love language.",              next: "duc_day1_coffee",   points: { duc: 12 } },
+                { text: "I only date men who count in binary.",    next: "duc_day1_binary",   points: { duc: 10 } },
             ],
         },
 
@@ -240,6 +242,17 @@ window.DIALOGUE_DATA = {
             playerExpr: "Smiling",
             text: "That was a non sequitur and also correct. Caffeine is how I compile. You may have earned a second " +
                 "conversation; tentatively.",
+            next: "duc_day1_close",
+        },
+
+        duc_day1_binary: {
+            type: "dialogue",
+            speaker: "ĐỨC",
+            portrait: "duc",
+            expression: "Surprised",
+            playerExpr: "Smiling",
+            text: "01001111 01101000. That translates to 'Oh.' I was not prepared for that. " +
+                "Most people cannot even count to ten in base two. You may stay.",
             next: "duc_day1_close",
         },
 
@@ -451,7 +464,7 @@ window.DIALOGUE_DATA = {
             expression: "Relaxed",
             playerExpr: "Smiling",
             text: "Of course I like everyone! Đức is my brother from another mother, Mikhail is my day one, and you?" +
-                " You’re the best. This whole vibe is on fleek. Do people still say that? I’m saying it!",
+                " You're the best. This whole vibe is on fleek. Do people still say that? I'm saying it!",
             bug: "muhammed_loop",
             next: "muhammed_day1_close",
         },
@@ -734,8 +747,8 @@ window.DIALOGUE_DATA = {
             portrait: "mikhail",
             expression: "Angry",
             playerExpr: "Smiling",
-            text: "He IS. He’s obsessed with efficiency. I hope it takes him forty minutes to get a coffee, and when " +
-                "it arrives, it’s a pink, sugary mess that ruins his ‘Serious Coder’ aesthetic.",
+            text: "He IS. He's obsessed with efficiency. I hope it takes him forty minutes to get a coffee, and when " +
+                "it arrives, it's a pink, sugary mess that ruins his 'Serious Coder' aesthetic.",
             next: "mikhail_day2_close",
         },
 
@@ -817,8 +830,8 @@ window.DIALOGUE_DATA = {
             portrait: "mikhail",
             expression: "Sad",
             playerExpr: "Sad",
-            text: "Exit to desktop, {PLAYER_NAME}. You’re looking for a romantic arc, but all I’ve got is a " +
-                "fatal error. Don’t come back.",
+            text: "Exit to desktop, {PLAYER_NAME}. You're looking for a romantic arc, but all I've got is a " +
+                "fatal error. Don't come back.",
             bug: "mikhail_garble",
             next: "day_end",
         },
