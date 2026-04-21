@@ -37,6 +37,13 @@ class DialogueScene {
         this.ducShakeTimer = 0;
         this.ducShakeDuration = 0.6;
 
+        // character sprites
+        this.currentGuySprite = null;
+        this.currentGirlSprite = null;
+        this.breathTimer = 0;
+        this.charOpacity = 0;
+        this.playerOpacity = 0;
+
         // UI state
         this.hoveredChoice = -1;
         this.nextBtnHovered = false;
@@ -154,6 +161,19 @@ class DialogueScene {
                 GameState.metCharacters.tutorial = true;
             }
 
+            // load character sprites based on expression tags
+            const folderMap = { "ĐỨC": "guy1", "MUHAMMED": "guy3", "MIKHAIL": "guy2" };
+            const folder = folderMap[this.currentSpeaker];
+            if (folder) {
+                const guyExpr = node.expression || "Neutral";
+                this.currentGuySprite = ASSET_MANAGER.getAsset(`./assets/characters/${folder}/${guyExpr}.png`)
+                    || ASSET_MANAGER.getAsset(`./assets/characters/${folder}/Neutral.png`);
+
+                const girlExpr = node.playerExpr || "Natu";
+                this.currentGirlSprite = ASSET_MANAGER.getAsset(`./assets/characters/girl1/${girlExpr}.png`)
+                    || ASSET_MANAGER.getAsset("./assets/characters/girl1/Natu.png");
+            }
+
             // trigger Đức shake effect if this node declares a reboot bug
             // we detect reboot arrival: if node.bug is 'duc_reboot', we are ON the
             // "warning; emotional payload..." line itself. Play a shake.
@@ -220,6 +240,11 @@ class DialogueScene {
 
         // Đức shake timer
         if (this.ducShakeTimer > 0) this.ducShakeTimer -= dt;
+
+        // sprite fade-in and breathing
+        if (this.charOpacity < 1) this.charOpacity = Math.min(1, this.charOpacity + dt * 0.67);
+        if (this.playerOpacity < 1) this.playerOpacity = Math.min(1, this.playerOpacity + dt * 0.67);
+        this.breathTimer += dt * 2.5;
 
         // System phase (for boot/day_end/etc.)
         if (this.phase === "system") {
@@ -479,21 +504,17 @@ class DialogueScene {
         ctx.save();
         ctx.translate(shakeX, shakeY);
 
-        // dialogue container + text (only when NOT in choice phase, i.e. character is speaking)
-        if (this.phase === "typing" || this.phase === "idle") {
-            // Draw dialogue box FIRST (bottom layer)
+        if (this.phase === "typing" || this.phase === "idle" || this.phase === "choice") {
+            const isChoice = this.phase === "choice";
+
+            this._drawCharSprite(ctx, isChoice);
             this._drawDialogueBox(ctx, AM);
-
-            // Draw character container ON TOP of dialogue box
             this._drawCharacterContainer(ctx, AM);
-
-            // Draw speaker name container ON TOP
             this._drawSpeakerLabel(ctx);
-        }
 
-        // reply buttons (choice phase only)
-        if (this.phase === "choice" && this.currentChoices) {
-            this._drawReplyButtons(ctx, AM);
+            if (isChoice && this.currentChoices) {
+                this._drawReplyButtons(ctx, AM);
+            }
         }
 
         ctx.restore();
@@ -505,61 +526,90 @@ class DialogueScene {
         }
     }
 
+    _drawCharSprite(ctx, isChoice) {
+        const guyImg = this.currentGuySprite;
+        const girlImg = this.currentGirlSprite ||
+            ASSET_MANAGER.getAsset("./assets/characters/girl1/Natu.png");
+
+        const W = 1920, H = 1080;
+        const breathY  = Math.sin(this.breathTimer) * 4;
+        const breathY2 = Math.sin(this.breathTimer * 0.85 + 1) * 3;
+        const guyTalking = this.currentSpeaker && !isChoice;
+
+        const girlScale = 0.85;
+        const girlX = isChoice ? -W * 0.18 : -W * 0.28;
+        const girlY = H * (1 - girlScale);
+        const guyX  = guyTalking ? W * 0.18 : W * 0.28;
+
+        const drawGirl = () => {
+            if (!girlImg) return;
+            ctx.save();
+            ctx.globalAlpha = this.playerOpacity;
+            ctx.drawImage(girlImg, girlX, girlY + breathY, W * girlScale, H * girlScale);
+            ctx.restore();
+        };
+        const guyScale = 1.45;
+        const drawGuy = () => {
+            if (!guyImg) return;
+            ctx.save();
+            ctx.globalAlpha = this.charOpacity;
+            const gW = W * guyScale;
+            const gH = H * guyScale;
+            const scaleOffX = (gW - W) / 2;
+            ctx.drawImage(guyImg, guyX - scaleOffX, breathY2, gW, gH);
+            ctx.restore();
+        };
+
+        if (guyTalking) { drawGirl(); drawGuy(); }
+        else { drawGuy(); drawGirl(); }
+    }
+
     _drawCharacterContainer(ctx, AM) {
         const c = this.CHAR_BOX;
         const containerImg = AM.getAsset("./assets/DatingGameUI/CharacterScreen/CharacterContainer.png");
 
         if (containerImg) {
             ctx.drawImage(containerImg, c.x, c.y, c.w, c.h);
+        }
+
+        // show Face image inside container if available
+        const faceMap = {
+            "ĐỨC":     "./assets/characters/guy1/Face.png",
+            "MUHAMMED": "./assets/characters/guy3/Face.png",
+            "MIKHAIL":  "./assets/characters/guy2/Face.png",
+        };
+        const facePath = faceMap[this.currentSpeaker];
+        const faceImg = facePath ? ASSET_MANAGER.getAsset(facePath) : null;
+
+        if (faceImg) {
+            const ip = 18;
+            const dx = c.x + ip, dy = c.y + ip;
+            const dw = c.w - ip * 2, dh = c.h - ip * 2;
+            ctx.save();
+            ctx.beginPath();
+            ctx.roundRect(dx, dy, dw, dh, 8);
+            ctx.clip();
+            ctx.drawImage(faceImg, dx, dy - 12, dw, dh);
+            ctx.restore();
         } else {
-            // fallback: pink rounded rect with inner shadow
-            ctx.fillStyle = "rgba(255, 240, 248, 0.94)";
-            this._roundRect(ctx, c.x, c.y, c.w, c.h, 20);
+            // fallback silhouette for Tutorial / unknown
+            const speakerTint = {
+                "TUTORIAL": "#4aa0a0",
+                "???":      "#4aa0a0",
+            }[this.currentSpeaker] || "#d18ebb";
+            ctx.save();
+            ctx.fillStyle = speakerTint;
+            ctx.globalAlpha = 0.85;
+            const cx = c.x + c.w / 2;
+            const cy = c.y + c.h * 0.5;
+            ctx.beginPath();
+            ctx.arc(cx, cy - 35, 30, 0, Math.PI * 2);
             ctx.fill();
-            ctx.strokeStyle = "#ff9ccf";
-            ctx.lineWidth = 4;
-            this._roundRect(ctx, c.x, c.y, c.w, c.h, 20);
-            ctx.stroke();
-
-            // inner inset panel
-            const pad = 30;
-            ctx.fillStyle = "#f8e4f1";
-            this._roundRect(ctx, c.x + pad, c.y + pad, c.w - pad * 2, c.h - pad * 2, 12);
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, 50, 75, 0, Math.PI, 0, true);
             ctx.fill();
+            ctx.restore();
         }
-
-        // portrait silhouette inside the container [placeholder for actual sprite art]
-        const cx = c.x + c.w / 2;
-        const cy = c.y + c.h * 0.5;
-
-        // tint based on character
-        const speakerTint = {
-            "ĐỨC":      "#7a9ed1",
-            "MUHAMMED":   "#e8b066",
-            "MIKHAIL":  "#a03a48",
-            "TUTORIAL": "#4aa0a0",
-            "???":      "#4aa0a0",
-        }[this.currentSpeaker] || "#d18ebb";
-
-        ctx.save();
-        ctx.fillStyle = speakerTint;
-        ctx.globalAlpha = 0.85;
-        // low-res / flicker effect for Muhammed, Mikhail
-        if (this.currentSpeaker === "MUHAMMED" && Math.random() < 0.03) ctx.globalAlpha = 0.5;
-        if (this.currentSpeaker === "MIKHAIL" && Math.random() < 0.04) {
-            ctx.translate((Math.random() - 0.5) * 6, 0);
-        }
-        if (this.currentSpeaker === "TUTORIAL" && Math.random() < 0.05) ctx.globalAlpha = 0.6;
-
-        // Head
-        ctx.beginPath();
-        ctx.arc(cx, cy - 35, 30, 0, Math.PI * 2);
-        ctx.fill();
-        // Body (shifted up and scaled)
-        ctx.beginPath();
-        ctx.ellipse(cx, cy , 50, 75, 0, Math.PI, 0, true);
-        ctx.fill();
-        ctx.restore();
     }
 
     _drawSpeakerLabel(ctx) {

@@ -40,6 +40,23 @@ ASSET_MANAGER.queueDownload("./assets/DatingGameUI/VictoryOrDefeat/ContinueBtn.p
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/VictoryOrDefeat/ContinueBtnPressed.png");
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/Background.jpg");
 
+const GUY_EXPRESSIONS = ["Neutral", "Angry", "Sad", "Surprised", "Relaxed", "Blink"];
+for (const expr of GUY_EXPRESSIONS) {
+	ASSET_MANAGER.queueDownload(`./assets/characters/guy1/${expr}.png`);
+	ASSET_MANAGER.queueDownload(`./assets/characters/guy2/${expr}.png`);
+	ASSET_MANAGER.queueDownload(`./assets/characters/guy3/${expr}.png`);
+}
+ASSET_MANAGER.queueDownload("./assets/characters/guy1/Face.png");
+ASSET_MANAGER.queueDownload("./assets/characters/guy2/Face.png");
+ASSET_MANAGER.queueDownload("./assets/characters/guy3/Face.png");
+
+const GIRL_EXPRESSIONS = ["Natu", "Smiling", "Angry", "Sad", "Sad_tears",
+	"Surprised", "neutral_pose", "Close_blushing", "open_blushing", "FullBlink", "BaseLine"];
+for (const expr of GIRL_EXPRESSIONS) {
+	ASSET_MANAGER.queueDownload(`./assets/characters/girl1/${expr}.png`);
+}
+ASSET_MANAGER.queueDownload("./assets/characters/girl1/Face.png");
+
 ASSET_MANAGER.downloadAll(() => {
 	const canvas = document.getElementById("gameWorld");
 	const ctx = canvas.getContext("2d");
