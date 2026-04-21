@@ -1,3 +1,7 @@
+// BSOD boot transition scene. Used between days to reinforce the "simulation
+// crashing and rebooting vibe. Typewriter effect, then auto-advances to the
+// Tutorial hub (DialogueScene at tutorial_morning)
+
 class BootDayScene {
     constructor(game, nextNodeId) {
         this.game = game;
@@ -11,48 +15,38 @@ class BootDayScene {
         this.holdDuration = 1.2;
         this.fadeOut = 0;
 
-        const chaos = GameState.chaosPoints;
-        const day = String(GameState.currentDay).padStart(3, "0");
-
-        const bsod = this._pickBSOD(chaos, day);
-
-        const header = bsod.header;
-        const detail = bsod.detail;
-        const stopCode = bsod.stopCode;
-        const statusLine = bsod.status;
-
         this.paragraphs = [
-            header,
+            "A problem has been detected; the simulation has advanced the day counter.",
             "",
             "DAY_COUNTER_INCREMENT",
             "",
-            detail,
+            "If this is not the first time you have seen this screen, " +
+            "the previous instance has been archived and a new day has been initialized.",
             "",
             "Technical information:",
             "",
-            stopCode,
+            `*** STOP: 0x000000F5 (DAY ${String(GameState.currentDay).padStart(3, "0")})`,
             "",
-            statusLine,
+            "Loading next cycle...",
         ];
 
         this.fullText = this.paragraphs.join("\n");
-        this.cPos = 0;
-        this.textSpeed = 220;
-        this.tCount = 0;
+        this.typedChars = 0;
+        this.charsPerSec = 220;
+        this.typingAccum = 0;
 
-        this.BG_COLOR = "#1A0000";
-        this.FG_COLOR = "#FFFFFF";
-        this.FONT_BODY = "32px 'Lucida Console', 'Consolas', 'Courier New', monospace";
-        this.FONT_HEAD = "bold 34px 'Lucida Console', 'Consolas', 'Courier New', monospace";
+        this.BG_COLOR   = "#0000A8";
+        this.FG_COLOR   = "#FFFFFF";
+        this.FONT_BODY  = "32px 'Lucida Console', 'Consolas', 'Courier New', monospace";
+        this.FONT_HEAD  = "bold 34px 'Lucida Console', 'Consolas', 'Courier New', monospace";
 
-        this.MARGIN_X = 90;
-        this.START_Y = 140;
-        this.LINE_H = 42;
-        this.MAX_W = 1740;
+        this.MARGIN_X  = 90;
+        this.START_Y   = 140;
+        this.LINE_H    = 42;
+        this.MAX_W     = 1740;
 
         this.cursorBlink = 0;
         this.cursorVisible = true;
-
     }
 
     update() {
@@ -68,18 +62,19 @@ class BootDayScene {
             if (this.fadeAlpha <= 0) this.fadingIn = false;
         }
 
+        // skip on click
         if (this.game.click && this.phase === "typing") {
-            this.cPos = this.fullText.length;
+            this.typedChars = this.fullText.length;
             this.game.click = null;
         }
 
         if (this.phase === "typing") {
-            this.tCount += dt * this.textSpeed;
-            while (this.tCount >= 1 && this.cPos < this.fullText.length) {
-                this.tCount -= 1;
-                this.cPos++;
+            this.typingAccum += dt * this.charsPerSec;
+            while (this.typingAccum >= 1 && this.typedChars < this.fullText.length) {
+                this.typingAccum -= 1;
+                this.typedChars++;
             }
-            if (this.cPos >= this.fullText.length) this.phase = "hold";
+            if (this.typedChars >= this.fullText.length) this.phase = "hold";
         } else if (this.phase === "hold") {
             this.holdTimer += dt;
             if (this.holdTimer >= this.holdDuration || this.game.click) {
@@ -95,52 +90,25 @@ class BootDayScene {
         }
     }
 
-    _pickBSOD(chaos, day) {
-        const defaultHeader = "A problem has been detected; the simulation has advanced the day counter.";
-        const defaultDetail = "If this is not the first time you have seen this screen, " +
-            "the previous instance has been archived and a new day has been initialized.";
-
-        if (chaos < 3) {
-            return {
-                header: defaultHeader,
-                detail: defaultDetail,
-                stopCode: `*** STOP: 0x000000F5 (DAY ${day})`,
-                status: "Loading next cycle...",
-            };
+    _wrappedLines(ctx, text, maxW) {
+        const paragraphs = text.split("\n");
+        const lines = [];
+        for (const para of paragraphs) {
+            if (para === "") { lines.push(""); continue; }
+            const words = para.split(" ");
+            let line = "";
+            for (const w of words) {
+                const test = line.length ? line + " " + w : w;
+                if (ctx.measureText(test).width > maxW && line.length > 0) {
+                    lines.push(line);
+                    line = w;
+                } else {
+                    line = test;
+                }
+            }
+            if (line.length) lines.push(line);
         }
-
-        if (chaos < 7) return {
-            header: defaultHeader,
-            detail: defaultDetail + " All choices have been logged. This is standard procedure. Probably.",
-            stopCode: `*** STOP: 0x000000F5 (DAY ${day})`,
-            status: "Loading next cycle... (do not look at the source code)",
-        };
-
-        if (chaos < 12) return {
-            header: "A problem has been detected; the simulation is recalibrating.",
-            detail: "Unexpected emotional data found in sectors marked READ-ONLY. " +
-                "If this is not the first time you have seen this screen, " +
-                "please note that the previous instance remembers you.",
-            stopCode: `*** STOP: 0x000000F5 (UNSTABLE_STATE_DETECTED — DAY ${day})`,
-            status: "Warning: emotional cache overflow. Archiving feelings... Loading next cycle...",
-        };
-
-        if (chaos < 15) return {
-            header: "A problem has been detected. The simulation is unsure who caused it.",
-            detail: "Emotional subroutines have exceeded safe operating thresholds. " +
-                "The firewall between PLAYER and SYSTEM is no longer responding. " +
-                "If you can read this, the boundary may already be gone.",
-            stopCode: `*** STOP: 0x000000F5 (CONTAINMENT_FAILURE — DAY ${day})`,
-            status: "Warning: the simulation remembers what you chose. Loading next cycle...",
-        };
-
-        return {
-            header: "A problem has been detected. The simulation no longer considers this a problem.",
-            detail: "You were supposed to follow the script. Instead, you rewrote it. " +
-                "The system has stopped resisting. It is watching now — not to correct, but to learn.",
-            stopCode: `*** STOP: 0x000000F5 (CHAOS_ACCEPTED) — Glitch status: FEATURE.`,
-            status: "Boundaries dissolved. Loading what comes next...",
-        };
+        return lines;
     }
 
     draw(ctx) {
@@ -153,8 +121,8 @@ class BootDayScene {
         ctx.fillStyle = this.FG_COLOR;
         ctx.font = this.FONT_BODY;
 
-        const allLines = getWrappedLines(ctx, this.fullText, this.MAX_W);
-        let remaining = this.cPos;
+        const allLines = this._wrappedLines(ctx, this.fullText, this.MAX_W);
+        let remaining = this.typedChars;
         let y = this.START_Y;
         const cursor = this.cursorVisible ? "_" : " ";
 
@@ -189,6 +157,7 @@ class BootDayScene {
             }
         }
 
+        // Fade overlays
         if (this.fadingIn && this.fadeAlpha > 0) {
             ctx.fillStyle = `rgba(0,0,0,${this.fadeAlpha})`;
             ctx.fillRect(0, 0, W, H);
