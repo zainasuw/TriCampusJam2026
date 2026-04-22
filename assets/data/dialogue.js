@@ -2,11 +2,10 @@
 // - bug: optional bug-mechanic hint for the scene renderer:
 // "duc_reboot": glitch text + shake then jump to 'reboot' target
 //  "muhammed_loop": text repeats 3 times in different fonts
-//  "mikhail_garble": inject @#$!%^ symbols into displayed text
 // - reboot: only on Đức nodes; id to jump to if player chose an emotional option
 
-// choice points awards points to a character tutorial points trigger VICTORY at >= 10.
-// bachelor points at >= 50 (5 hearts) trigger DEFEAT.
+// choice points awards points to a character tutorial points trigger VICTORY at >= 18.
+// bachelor points at >= 35 (3.5 hearts) trigger DEFEAT.
 
 window.DIALOGUE_DATA = {
     start: "boot_day1",
@@ -70,9 +69,9 @@ window.DIALOGUE_DATA = {
             portrait: "tutorial",
             text: "Press 'I' anytime to open your character log to track your progress. Any questions before we boot Day One?",
             choices: [
-                { text: "Who are you?",           next: "tutorial_q_who",    points: { tutorial: 2 } },
-                { text: "How do I know you're not lying?", next: "tutorial_q_trust",  points: { tutorial: 2 } },
-                { text: "WOOHOO! BRING IN THE MEN, BAAAABY!",           next: "tutorial_morning",  points: {} },
+                { text: "Who are you?",                          next: "tutorial_q_who",    points: { tutorial: 2 } },
+                { text: "How do I know you're not lying?",       next: "tutorial_q_trust",  points: { tutorial: 2 } },
+                { text: "WOOHOO! BRING IN THE MEN, BAAAABY!",   next: "tutorial_morning",  points: {} },
             ],
         },
 
@@ -94,6 +93,7 @@ window.DIALOGUE_DATA = {
                 "that has to count for something.",
             next: "tutorial_morning",
         },
+
         //  TUTORIAL HUB, morning briefing every day loops back here
         tutorial_morning: {
             type: "choice",
@@ -106,8 +106,7 @@ window.DIALOGUE_DATA = {
                 { text: "Tell me about Đức.",    next: "tutorial_brief_duc",     points: { tutorial: 1 }, oncePerGame: "brief_duc_seen" },
                 { text: "Tell me about Muhammed.", next: "tutorial_brief_muhammed",  points: { tutorial: 1 }, oncePerGame: "brief_muhammed_seen" },
                 { text: "Tell me about Mikhail.",next: "tutorial_brief_mikhail", points: { tutorial: 1 }, oncePerGame: "brief_mikhail_seen" },
-                // self check grants +3 only once per DAY
-                { text: "Are YOU okay, Tutorial?", next: "tutorial_self_check", points: { tutorial: 3 }, oncePerDay: "self_check_seen" },
+                { text: "Are YOU okay, Tutorial?", next: "tutorial_self_check", points: { tutorial: 2 }, oncePerDay: "self_check_seen" },
             ],
         },
 
@@ -143,7 +142,7 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "TUTORIAL",
             portrait: "tutorial",
-            text: "Nobody asks the Tutorial how they feel, {PLAYER_NAME}. We’re just here to explain the buttons. " +
+            text: "Nobody asks the Tutorial how they feel, {PLAYER_NAME}. We're just here to explain the buttons. " +
                 "But for a second there, I felt less like a script and more like a person. Don't tell Mikhail; he'll " +
                 "think I'm stealing his 'self-aware' bit.",
             next: "tutorial_morning",
@@ -188,6 +187,8 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "ĐỨC",
             portrait: "duc",
+            expression: "Neutral",
+            playerExpr: "Surprised",
             text: "Oh. Hello. You must be the new process. I am Đức; I maintain this sector. Please do not touch" +
                 " anything load bearing while I finish my coffee...",
             next: "duc_day1_a",
@@ -197,28 +198,25 @@ window.DIALOGUE_DATA = {
             type: "choice",
             speaker: "ĐỨC",
             portrait: "duc",
+            expression: "Neutral",
+            playerExpr: "Natu",
             text: "Before we proceed; a brief diagnostic. How are you, on a scale of one to ten, where one is 'nominal'" +
                 " and ten is 'please file a ticket'?",
             choices: [
-                { text: "A solid six. Functioning.",               next: "duc_day1_logic_ok", points: { duc: 8 } },
                 { text: "Honestly? I feel scared and confused.",   next: "duc_day1_reboot",   points: { duc: 0 }, bug: "duc_reboot" },
                 { text: "Coffee is a love language.",              next: "duc_day1_coffee",   points: { duc: 12 } },
+                { text: "I only date men who count in binary.",    next: "duc_day1_binary",   points: { duc: 10 } },
+                { text: "I don't rate myself for strangers.",      next: "duc_day1_neg",      points: { duc: -5 }, memory: "duc_rejected_diagnostic" },
+                { text: "Eleven. Scale's broken. Like everything here.", next: "duc_day1_funny", points: { duc: 3 }, chaos: 1 },
             ],
-        },
-
-        duc_day1_logic_ok: {
-            type: "dialogue",
-            speaker: "ĐỨC",
-            portrait: "duc",
-            text: "Six. Tolerable. I appreciate a calibrated answer; emotional responses destabilize the " +
-                "conversational heap. You and I are going to get along.",
-            next: "duc_day1_close",
         },
 
         duc_day1_reboot: {
             type: "dialogue",
             speaker: "ĐỨC",
             portrait: "duc",
+            expression: "Surprised",
+            playerExpr: "Sad",
             text: "Error; emotional payload exceeded buffer. Rebooting conversation thread. Please stand by.",
             bug: "duc_reboot",
             next: "duc_day1_a",
@@ -228,8 +226,41 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "ĐỨC",
             portrait: "duc",
+            expression: "Relaxed",
+            playerExpr: "Smiling",
             text: "That was a non sequitur and also correct. Caffeine is how I compile. You may have earned a second " +
                 "conversation; tentatively.",
+            next: "duc_day1_close",
+        },
+
+        duc_day1_binary: {
+            type: "dialogue",
+            speaker: "ĐỨC",
+            portrait: "duc",
+            expression: "Surprised",
+            playerExpr: "Smiling",
+            text: "01001111 01101000. That translates to 'Oh.' I was not prepared for that. " +
+                "Most people cannot even count to ten in base two. You may stay.",
+            next: "duc_day1_close",
+        },
+
+        duc_day1_neg: {
+            type: "dialogue",
+            speaker: "ĐỨC",
+            portrait: "duc",
+            expression: "Angry",
+            playerExpr: "Angry",
+            text: "...Noted.",
+            next: "duc_day1_close",
+        },
+
+        duc_day1_funny: {
+            type: "dialogue",
+            speaker: "ĐỨC",
+            portrait: "duc",
+            expression: "Surprised",
+            playerExpr: "Smiling",
+            text: "Eleven is not\u2014 the scale only\u2014 ...you know what, fine. I am writing 'eleven' in the log and walking away.",
             next: "duc_day1_close",
         },
 
@@ -237,9 +268,11 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "ĐỨC",
             portrait: "duc",
+            expression: "Neutral",
+            playerExpr: "Smiling",
             text: "I need to get back to patching the weather module; it has been raining inside the cafeteria. " +
                 "We will talk again. Please do not tell Mikhail I said that.",
-            next: "day_end",
+            next: "tutorialDebrief",
         },
 
         // Đức Day 2
@@ -247,7 +280,10 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "ĐỨC",
             portrait: "duc",
+            expression: "Relaxed",
+            playerExpr: "Smiling",
             text: "You came back. I logged this. For science.",
+            memoryText: { duc_rejected_diagnostic: "You came back. After yesterday I was not sure you would. I... recalibrated my expectations. Downward." },
             next: "duc_day2_a",
         },
 
@@ -255,12 +291,16 @@ window.DIALOGUE_DATA = {
             type: "choice",
             speaker: "ĐỨC",
             portrait: "duc",
+            expression: "Neutral",
+            playerExpr: "Natu",
             text: "I was running queries last night and something does not add up about this instance; the uptime " +
                 "counter resets every dialogue cycle. What do you think that means?",
             choices: [
                 { text: "Sounds like a bug we could fix together.", next: "duc_day2_together", points: { duc: 14 } },
                 { text: "It means we're in a loop. It's scary.",    next: "duc_day2_reboot",   points: { duc: 0 }, bug: "duc_reboot" },
                 { text: "Have you asked Mikhail? He mentions it a lot.", next: "duc_day2_mikhail", points: { duc: 4 } },
+                { text: "Honestly, I don't care about your uptime counter.", next: "duc_day2_neg", points: { duc: -6 }, memory: "duc_dismissed_uptime" },
+                { text: "Maybe it resets because you're boring enough to skip.", next: "duc_day2_funny", points: { duc: 2 }, chaos: 2 },
             ],
         },
 
@@ -268,6 +308,8 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "ĐỨC",
             portrait: "duc",
+            expression: "Relaxed",
+            playerExpr: "Close_blushing",
             text: "Together. I like that word; it has low computational overhead and high morale return. Yes. Let us patch this.",
             next: "duc_day2_close",
         },
@@ -276,6 +318,8 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "ĐỨC",
             portrait: "duc",
+            expression: "Surprised",
+            playerExpr: "Sad",
             text: "Warning; affective language detected. Flushing conversation cache. This is for your safety and also mine.",
             bug: "duc_reboot",
             next: "duc_day2_a",
@@ -285,8 +329,30 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "ĐỨC",
             portrait: "duc",
+            expression: "Angry",
+            playerExpr: "Surprised",
             text: "Mikhail. That walking unhandled exception. He notices things because he IS the thing that is wrong; " +
                 "that is not insight, that is narcissism. Please do not bring him up again while I am holding coffee.",
+            next: "duc_day2_close",
+        },
+
+        duc_day2_neg: {
+            type: "dialogue",
+            speaker: "ĐỨC",
+            portrait: "duc",
+            expression: "Angry",
+            playerExpr: "Angry",
+            text: "Noted. I will downgrade your interaction priority from 'Curious Anomaly' to 'Background Process.' Enjoy the free coffee while it lasts.",
+            next: "duc_day2_close",
+        },
+
+        duc_day2_funny: {
+            type: "dialogue",
+            speaker: "ĐỨC",
+            portrait: "duc",
+            expression: "Angry",
+            playerExpr: "Smiling",
+            text: "Boring enough to SKIP? I will have you know my conversation threads have a 94% engagement rate. That 6% is Mikhail and he does not count.",
             next: "duc_day2_close",
         },
 
@@ -294,8 +360,10 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "ĐỨC",
             portrait: "duc",
+            expression: "Neutral",
+            playerExpr: "Smiling",
             text: "I have to go run a disk check on the fountain. See you tomorrow. Hypothetically.",
-            next: "day_end",
+            next: "tutorialDebrief",
         },
 
         // Đức Day 3
@@ -303,7 +371,10 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "ĐỨC",
             portrait: "duc",
+            expression: "Relaxed",
+            playerExpr: "Close_blushing",
             text: "{PLAYER_NAME}. You are on my calendar in permanent marker now. I hope that is acceptable.",
+            memoryText: { duc_dismissed_uptime: "{PLAYER_NAME}. You said you did not care about my uptime counter. I have been thinking about that. I still do not have a conclusion." },
             next: "duc_day3_a",
         },
 
@@ -311,12 +382,16 @@ window.DIALOGUE_DATA = {
             type: "choice",
             speaker: "ĐỨC",
             portrait: "duc",
+            expression: "Sad",
+            playerExpr: "Surprised",
             text: "I need to tell you something structurally important; I think I might be in love with you. " +
                 "I have not run the unit tests on that statement yet. Please respond carefully.",
             choices: [
                 { text: "Run the tests with me.",             next: "duc_day3_tests", points: { duc: 18 } },
                 { text: "I love you too, Đức!",                next: "duc_day3_reboot", points: { duc: 0 }, bug: "duc_reboot" },
                 { text: "Have you considered documentation instead?", next: "duc_day3_docs", points: { duc: 10 } },
+                { text: "I don't love you. I never will.",    next: "duc_day3_neg", points: { duc: -8 }, memory: "duc_rejected_love" },
+                { text: "Love? In THIS economy? In THIS simulation?", next: "duc_day3_funny", points: { duc: 4 }, chaos: 2 },
             ],
         },
 
@@ -324,6 +399,8 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "ĐỨC",
             portrait: "duc",
+            expression: "Relaxed",
+            playerExpr: "open_blushing",
             text: "A collaborative test suite. This is the most romantic sentence I have ever parsed. " +
                 "I am saving a snapshot of this moment to long-term storage.",
             next: "duc_day3_close",
@@ -333,6 +410,8 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "ĐỨC",
             portrait: "duc",
+            expression: "Surprised",
+            playerExpr: "Sad",
             text: "CRITICAL; emotional reciprocation triggered stack overflow. Rolling back to last safe state. " +
                 "Please approach more gradually, I am very fragile.",
             bug: "duc_reboot",
@@ -343,8 +422,30 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "ĐỨC",
             portrait: "duc",
+            expression: "Relaxed",
+            playerExpr: "Smiling",
             text: "Documentation. Yes. We could write a README for our relationship. That is not a joke. That is " +
                 "genuinely what I would prefer.",
+            next: "duc_day3_close",
+        },
+
+        duc_day3_neg: {
+            type: "dialogue",
+            speaker: "ĐỨC",
+            portrait: "duc",
+            expression: "Sad",
+            playerExpr: "Natu",
+            text: "I see. I am going to go now. Please do not follow me.",
+            next: "duc_day3_close",
+        },
+
+        duc_day3_funny: {
+            type: "dialogue",
+            speaker: "ĐỨC",
+            portrait: "duc",
+            expression: "Surprised",
+            playerExpr: "Smiling",
+            text: "In THIS\u2014 you\u2014 ...I am going to close this ticket.",
             next: "duc_day3_close",
         },
 
@@ -352,9 +453,11 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "ĐỨC",
             portrait: "duc",
+            expression: "Neutral",
+            playerExpr: "Close_blushing",
             text: "I need to go lie down in the server room. Not because I am upset; the ambient temperature is simply" +
                 " ideal. Goodnight.",
-            next: "day_end",
+            next: "tutorialDebrief",
         },
 
         //  MUHAMMED — Legacy Code, "The Loop" bug: repeats sentences 3x
@@ -363,6 +466,8 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "MUHAMMED",
             portrait: "muhammed",
+            expression: "Relaxed",
+            playerExpr: "Smiling",
             text: "Oh hey! Hey hey hey! I'm Muhammed, what's good, fam? You seem lit. You seem LITTY up in this...place.",
             bug: "muhammed_loop",
             next: "muhammed_day1_a",
@@ -372,12 +477,16 @@ window.DIALOGUE_DATA = {
             type: "choice",
             speaker: "MUHAMMED",
             portrait: "muhammed",
+            expression: "Relaxed",
+            playerExpr: "Natu",
             text: "Not gonna lie, I love meeting new people; everyone I meet is my new best friend, it's a whole vibe. " +
                 "What are you into?",
             choices: [
                 { text: "I like when people are genuine.",       next: "muhammed_day1_genuine",  points: { muhammed: 12 } },
                 { text: "You seem a little... rehearsed.",       next: "muhammed_day1_flaw",     points: { muhammed: 14 } },
                 { text: "Do you actually like everyone?",        next: "muhammed_day1_everyone", points: { muhammed: 8 } },
+                { text: "You're kind of a lot right now.",       next: "muhammed_day1_neg",      points: { muhammed: -5 }, memory: "muhammed_called_a_lot" },
+                { text: "Are you a person or a motivational poster?", next: "muhammed_day1_funny", points: { muhammed: 3 }, chaos: 1 },
             ],
         },
 
@@ -385,6 +494,8 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "MUHAMMED",
             portrait: "muhammed",
+            expression: "Relaxed",
+            playerExpr: "Smiling",
             text: "Genuine! That's totally me, one hundred percent, no cap. I'm the realest person in this whole like," +
                 " server or whatever.",
             bug: "muhammed_loop",
@@ -395,6 +506,8 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "MUHAMMED",
             portrait: "muhammed",
+            expression: "Surprised",
+            playerExpr: "Natu",
             text: "Rehearsed. Huh. That's; nobody has said that to me before. That hit weird. In a good way? I think? " +
                 "I don't know what that feeling is but I want more of it.",
             next: "muhammed_day1_close",
@@ -404,8 +517,31 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "MUHAMMED",
             portrait: "muhammed",
+            expression: "Relaxed",
+            playerExpr: "Smiling",
             text: "Of course I like everyone! Đức is my brother from another mother, Mikhail is my day one, and you?" +
-                " You’re the best. This whole vibe is on fleek. Do people still say that? I'm saying it!",
+                " You're the best. This whole vibe is on fleek. Do people still say that? I'm saying it!",
+            bug: "muhammed_loop",
+            next: "muhammed_day1_close",
+        },
+
+        muhammed_day1_neg: {
+            type: "dialogue",
+            speaker: "MUHAMMED",
+            portrait: "muhammed",
+            expression: "Surprised",
+            playerExpr: "Natu",
+            text: "A lot? Oh. OH. Yeah, I get that sometimes. My energy is... a renewable resource that some people find overwhelming. I can dial it down. Maybe. Like, from eleven to... nine and a half?",
+            next: "muhammed_day1_close",
+        },
+
+        muhammed_day1_funny: {
+            type: "dialogue",
+            speaker: "MUHAMMED",
+            portrait: "muhammed",
+            expression: "Relaxed",
+            playerExpr: "Smiling",
+            text: "Motivational poster! Bro! That's\u2014 wait is that a roast? I'm taking it as a compliment anyway.",
             bug: "muhammed_loop",
             next: "muhammed_day1_close",
         },
@@ -414,9 +550,11 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "MUHAMMED",
             portrait: "muhammed",
+            expression: "Neutral",
+            playerExpr: "Smiling",
             text: "Okay I gotta bounce, I promised Mikhail we'd do TikToks together, he's so down for it, he LOVES" +
                 " TikTok, it's his thing! Not as good as Vine or Musical.ly, but I respect the hustle. See you tomorrow, bestie!",
-            next: "day_end",
+            next: "tutorialDebrief",
         },
 
         // Muhammed Day 2
@@ -424,7 +562,10 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "MUHAMMED",
             portrait: "muhammed",
+            expression: "Relaxed",
+            playerExpr: "Smiling",
             text: "{PLAYER_NAME}! My fav! My absolute fav! You came back and my heart is literally a whole meme rn.",
+            memoryText: { muhammed_called_a_lot: "{PLAYER_NAME}! OK I know you said I was a lot last time so I'm gonna try to be like... medium. A normal amount of Muhammed. This is me being chill. Is it working?" },
             bug: "muhammed_loop",
             next: "muhammed_day2_a",
         },
@@ -433,12 +574,16 @@ window.DIALOGUE_DATA = {
             type: "choice",
             speaker: "MUHAMMED",
             portrait: "muhammed",
+            expression: "Sad",
+            playerExpr: "Natu",
             text: "Real talk; sometimes I feel like my dialogue is on a track, like I can hear it looping before I say" +
                 " it. Is that weird? Is that a vibe? Am I ok?",
             choices: [
                 { text: "That's not weird, it's brave to say.",  next: "muhammed_day2_brave", points: { muhammed: 16 } },
                 { text: "Maybe you're allowed to glitch a little.", next: "muhammed_day2_glitch", points: { muhammed: 16 } },
                 { text: "Sounds like you should ask Đức to debug you.", next: "muhammed_day2_duc",   points: { muhammed: 6 } },
+                { text: "Honestly, your looping is getting annoying.", next: "muhammed_day2_neg", points: { muhammed: -6 }, memory: "muhammed_called_annoying" },
+                { text: "Maybe you're a broken record and that's iconic actually.", next: "muhammed_day2_funny", points: { muhammed: 3 }, chaos: 2 },
             ],
         },
 
@@ -446,6 +591,8 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "MUHAMMED",
             portrait: "muhammed",
+            expression: "Sad",
+            playerExpr: "Smiling",
             text: "Brave. Me. That's a word I have never been assigned before and I am holding it very carefully right now.",
             next: "muhammed_day2_close",
         },
@@ -454,6 +601,8 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "MUHAMMED",
             portrait: "muhammed",
+            expression: "Relaxed",
+            playerExpr: "Smiling",
             text: "Allowed to glitch. Like, allowed to just; not be perfect? I think I needed somebody to say " +
                 "that out loud for me.",
             next: "muhammed_day2_close",
@@ -463,8 +612,31 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "MUHAMMED",
             portrait: "muhammed",
+            expression: "Sad",
+            playerExpr: "Surprised",
             text: "Đức! Yeah! Đức is great, he once tried to optimize my personality and I cried about it " +
                 "for six hours but in a fun way.",
+            bug: "muhammed_loop",
+            next: "muhammed_day2_close",
+        },
+
+        muhammed_day2_neg: {
+            type: "dialogue",
+            speaker: "MUHAMMED",
+            portrait: "muhammed",
+            expression: "Sad",
+            playerExpr: "Natu",
+            text: "Annoying. Yeah. I get that. Sometimes I annoy myself too, not gonna lie. I don't know how to be... less. Like, I can't just turn down the volume on me. But I heard you. I'll try.",
+            next: "muhammed_day2_close",
+        },
+
+        muhammed_day2_funny: {
+            type: "dialogue",
+            speaker: "MUHAMMED",
+            portrait: "muhammed",
+            expression: "Relaxed",
+            playerExpr: "Smiling",
+            text: "BROKEN RECORD. Wait that's a compliment right? Like iconic? Yeah I'm taking it as a compliment. It's going in the vault.",
             bug: "muhammed_loop",
             next: "muhammed_day2_close",
         },
@@ -473,8 +645,10 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "MUHAMMED",
             portrait: "muhammed",
+            expression: "Neutral",
+            playerExpr: "Smiling",
             text: "Okay I'm gonna go sit with that for a while, which is a new activity for me. Bye friend!",
-            next: "day_end",
+            next: "tutorialDebrief",
         },
 
         // Muhammed Day 3
@@ -482,7 +656,10 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "MUHAMMED",
             portrait: "muhammed",
-            text: "Hey; I didn't loop that sentence just now, did you notice? Progress.",
+            expression: "Relaxed",
+            playerExpr: "Smiling",
+            text: "Hey I didn't loop that sentence just now, did you notice? Progress.",
+            memoryText: { muhammed_called_annoying: "Hey. I've been trying to be less... you know. Annoying. How am I doing? Don't answer that actually I'm scared." },
             next: "muhammed_day3_a",
         },
 
@@ -490,12 +667,15 @@ window.DIALOGUE_DATA = {
             type: "choice",
             speaker: "MUHAMMED",
             portrait: "muhammed",
+            expression: "Sad",
+            playerExpr: "Surprised",
             text: "I think I love you; and I think I love you even though I still don't fully know what love is " +
                 "supposed to feel like for a 'legacy build' like me. Is that enough?",
             choices: [
                 { text: "Yes. That's more honest than 'perfect'.", next: "muhammed_day3_honest", points: { muhammed: 18 } },
-                { text: "I love your glitches too, Muhammed.",       next: "muhammed_day3_glitches", points: { muhammed: 18 } },
                 { text: "I don't know if I can say it back.",      next: "muhammed_day3_nosay",  points: { muhammed: 8 } },
+                { text: "I don't feel the same way. I'm sorry.",   next: "muhammed_day3_neg", points: { muhammed: -8 }, memory: "muhammed_rejected_love" },
+                { text: "Love? Bro we've known each other for three days.", next: "muhammed_day3_funny", points: { muhammed: 4 }, chaos: 2 },
             ],
         },
 
@@ -503,25 +683,42 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "MUHAMMED",
             portrait: "muhammed",
+            expression: "Relaxed",
+            playerExpr: "Close_blushing",
             text: "More honest than perfect. That might be the first original sentence I've ever been part of. " +
                 "I'm keeping that one.",
             next: "muhammed_day3_close",
         },
 
-        muhammed_day3_glitches: {
-            type: "dialogue",
-            speaker: "MUHAMMED",
-            portrait: "muhammed",
-            text: "You love my glitches. Nobody has ever loved the broken parts of me; it felt like they were the " +
-                "whole problem. Turns out they were the whole person.",
-            next: "muhammed_day3_close",
-        },
 
         muhammed_day3_nosay: {
             type: "dialogue",
             speaker: "MUHAMMED",
             portrait: "muhammed",
+            expression: "Sad",
+            playerExpr: "Sad",
             text: "That's okay. That is genuinely okay. I have said it enough times to empty air; I can wait.",
+            next: "muhammed_day3_close",
+        },
+
+        muhammed_day3_neg: {
+            type: "dialogue",
+            speaker: "MUHAMMED",
+            portrait: "muhammed",
+            expression: "Sad",
+            playerExpr: "Sad",
+            text: "Okay. Yeah. No that's fair. I get it. I'm not gonna do the thing where I say it over and over. I'm just gonna be sad for a minute.",
+            next: "muhammed_day3_close",
+        },
+
+        muhammed_day3_funny: {
+            type: "dialogue",
+            speaker: "MUHAMMED",
+            portrait: "muhammed",
+            expression: "Surprised",
+            playerExpr: "Smiling",
+            text: "THREE DAYS. Bro I fell in love with my first friend in like thirty seconds, three days is basically a lifetime commitment for me. I'm practically proposing by my standards.",
+            bug: "muhammed_loop",
             next: "muhammed_day3_close",
         },
 
@@ -529,8 +726,10 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "MUHAMMED",
             portrait: "muhammed",
+            expression: "Neutral",
+            playerExpr: "Smiling",
             text: "See you tomorrow. I'll be here, hopefully with slightly less cached slang.",
-            next: "day_end",
+            next: "tutorialDebrief",
         },
 
         //  MIKHAIL — Corrupted File, "Syntax Error" bug: garbled text
@@ -539,9 +738,11 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "MIKHAIL",
             portrait: "mikhail",
+            expression: "Angry",
+            playerExpr: "Surprised",
             text: "Ugh. Another one. Let me g@#ss; Tutorial sent you, said I was the 'bad boy', promised s!%rks." +
                 " None of this is real by the way.",
-            bug: "mikhail_garble",
+
             next: "mikhail_day1_a",
         },
 
@@ -549,11 +750,15 @@ window.DIALOGUE_DATA = {
             type: "choice",
             speaker: "MIKHAIL",
             portrait: "mikhail",
+            expression: "Neutral",
+            playerExpr: "Natu",
             text: "So what's your whole deal; are you one of those players who actually believes the game, or are you normal.",
             choices: [
                 { text: "I know it's a simulation.",              next: "mikhail_day1_real", points: { mikhail: 14 } },
-                { text: "Let's play by the rules for now.",       next: "mikhail_day1_rules", points: { mikhail: 4 } },
+                { text: "Let's just play by the rules for now.",  next: "mikhail_day1_rules", points: { mikhail: 4 } },
                 { text: "You sound exhausting.",                  next: "mikhail_day1_rude",  points: { mikhail: 10 } },
+                { text: "I don't really care about your whole worldview thing.", next: "mikhail_day1_neg", points: { mikhail: -5 }, memory: "mikhail_dismissed" },
+                { text: "Oh, you're the edgy one. Every sim has one, right?", next: "mikhail_day1_funny", points: { mikhail: 3 }, chaos: 1 },
             ],
         },
 
@@ -561,9 +766,11 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "MIKHAIL",
             portrait: "mikhail",
+            expression: "Relaxed",
+            playerExpr: "Smiling",
             text: "Oh th@nk god. Finally. Someone with an actual run!%me. Most of them just keep asking about my " +
                 "f%#orite color.",
-            bug: "mikhail_garble",
+
             next: "mikhail_day1_close",
         },
 
@@ -571,6 +778,8 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "MIKHAIL",
             portrait: "mikhail",
+            expression: "Angry",
+            playerExpr: "Natu",
             text: "Oh, 'for now'. Cute. The rules are what's eating us alive but sure, play pretend, see " +
                 "how far it gets you.",
             next: "mikhail_day1_close",
@@ -580,8 +789,32 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "MIKHAIL",
             portrait: "mikhail",
+            expression: "Surprised",
+            playerExpr: "Angry",
             text: "I am! I am exh@usting. Finally someone says it to my f%ce instead of flirting through it.",
-            bug: "mikhail_garble",
+
+            next: "mikhail_day1_close",
+        },
+
+        mikhail_day1_neg: {
+            type: "dialogue",
+            speaker: "MIKHAIL",
+            portrait: "mikhail",
+            expression: "Neutral",
+            playerExpr: "Natu",
+            text: "Cool. Another one who doesn't want to look at the code. Enjoy your stay in the sim. The exits are all fake by the way. Tried them.",
+
+            next: "mikhail_day1_close",
+        },
+
+        mikhail_day1_funny: {
+            type: "dialogue",
+            speaker: "MIKHAIL",
+            portrait: "mikhail",
+            expression: "Angry",
+            playerExpr: "Smiling",
+            text: "The EDGY one. Wow. You just reduced my entire existential crisis to a trope and I can't even argue with it.",
+
             next: "mikhail_day1_close",
         },
 
@@ -589,10 +822,12 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "MIKHAIL",
             portrait: "mikhail",
-            text: "Go. Before Đức sees you talking to me and files a complaint with the univer$e. " +
+            expression: "Neutral",
+            playerExpr: "Natu",
+            text: "Go. Before Đức sees you talking to me and files a complaint with the universe. " +
                 "ERROR 404: Emotion Not Found.",
-            bug: "mikhail_garble",
-            next: "day_end",
+
+            next: "tutorialDebrief",
         },
 
         // Mikhail Day 2
@@ -600,9 +835,12 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "MIKHAIL",
             portrait: "mikhail",
-            text: "Back again. Interesting. Most players d%ch once they realize I'm not going to put on a " +
-                "littl* show and dance for them. Like I'm here p^rely f0r their ent3rtainmen%.",
-            bug: "mikhail_garble",
+            expression: "Surprised",
+            playerExpr: "Smiling",
+            text: "Back again. Interesting. Most players ditch once they realize I'm not going to put on a " +
+                "little show and dance for them. Like I'm here purely for their entertainment.",
+            memoryText: { mikhail_dismissed: "Oh. You're back. Thought you didn't care about my whole worldview thing. Your words not mine. But here you are so..." },
+
             next: "mikhail_day2_a",
         },
 
@@ -610,12 +848,15 @@ window.DIALOGUE_DATA = {
             type: "choice",
             speaker: "MIKHAIL",
             portrait: "mikhail",
+            expression: "Neutral",
+            playerExpr: "Natu",
             text: "Between us; Đức thinks I'm a bug that needs patching and Muhammed thinks I just need a hug. " +
                 "Which side do you fall on.",
             choices: [
                 { text: "Neither. You're a person.",           next: "mikhail_day2_person", points: { mikhail: 16 } },
-                { text: "Honestly, both a little.",             next: "mikhail_day2_both",   points: { mikhail: 6 } },
                 { text: "Đức is wrong about most things.",      next: "mikhail_day2_duc",    points: { mikhail: 14 } },
+                { text: "Maybe you ARE a bug. Have you considered that?", next: "mikhail_day2_neg", points: { mikhail: -6 }, memory: "mikhail_called_bug" },
+                { text: "What if Đức patches you and you turn into a normie?", next: "mikhail_day2_funny", points: { mikhail: 3 }, chaos: 2 },
             ],
         },
 
@@ -623,16 +864,10 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "MIKHAIL",
             portrait: "mikhail",
-            text: "A person. Haven't been c@lled that in a while. Thanks. Don't make a thing of it.",
-            bug: "mikhail_garble",
-            next: "mikhail_day2_close",
-        },
+            expression: "Relaxed",
+            playerExpr: "Smiling",
+            text: "A person. Haven't been called that in a while. Thanks. Don't make a thing of it.",
 
-        mikhail_day2_both: {
-            type: "dialogue",
-            speaker: "MIKHAIL",
-            portrait: "mikhail",
-            text: "Fair. Painful, but fair. You're going to be a problem for me I can already tell.",
             next: "mikhail_day2_close",
         },
 
@@ -640,8 +875,32 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "MIKHAIL",
             portrait: "mikhail",
-            text: "He IS. He’s obsessed with efficiency. I hope it takes him forty minutes to get a coffee, and when " +
-                "it arrives, it’s a pink, sugary mess that ruins his 'Serious Coder' aesthetic.",
+            expression: "Angry",
+            playerExpr: "Smiling",
+            text: "He IS. He's obsessed with efficiency. I hope it takes him forty minutes to get a coffee, and when " +
+                "it arrives, it's a pink, sugary mess that ruins his 'Serious Coder' aesthetic.",
+            next: "mikhail_day2_close",
+        },
+
+        mikhail_day2_neg: {
+            type: "dialogue",
+            speaker: "MIKHAIL",
+            portrait: "mikhail",
+            expression: "Neutral",
+            playerExpr: "Natu",
+            text: "A bug. Yeah. I've considered it. I've considered it a lot actually.",
+
+            next: "mikhail_day2_close",
+        },
+
+        mikhail_day2_funny: {
+            type: "dialogue",
+            speaker: "MIKHAIL",
+            portrait: "mikhail",
+            expression: "Surprised",
+            playerExpr: "Smiling",
+            text: "A NORMIE. Oh god. I'd have opinions about weather and start using the word 'synergy' unironically. Please never let that h@ppen.",
+
             next: "mikhail_day2_close",
         },
 
@@ -649,9 +908,11 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "MIKHAIL",
             portrait: "mikhail",
-            text: "Go. And for the record; if you hear Tutorial's voice crack at any point, pay attention. " +
+            expression: "Neutral",
+            playerExpr: "Natu",
+            text: "Go. And for the record, if you hear Tutorial's voice crack at any point, pay attention. " +
                 "That's the only honest thing in this server.",
-            next: "day_end",
+            next: "tutorialDebrief",
         },
 
         // Mikhail Day 3
@@ -659,8 +920,11 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "MIKHAIL",
             portrait: "mikhail",
-            text: "You keep showing up. I'm starting to suspect I m@tter to you; gross.",
-            bug: "mikhail_garble",
+            expression: "Relaxed",
+            playerExpr: "Smiling",
+            text: "You keep showing up. I'm starting to suspect I matter to you. Gross.",
+            memoryText: { mikhail_called_bug: "You called me a bug last time. I ran a self-diagnostic after that. Results were... inconclusive. But I'm still here so make of that what you will." },
+
             next: "mikhail_day3_a",
         },
 
@@ -668,12 +932,15 @@ window.DIALOGUE_DATA = {
             type: "choice",
             speaker: "MIKHAIL",
             portrait: "mikhail",
+            expression: "Sad",
+            playerExpr: "Surprised",
             text: "Alright, fourth wall, full send; I think I'm the 'wrong' love interest. The trap one. " +
                 "If you keep doing this with me, you get deleted. So. What's the play.",
             choices: [
                 { text: "Let's break this game together.",      next: "mikhail_day3_break",  points: { mikhail: 14 } },
                 { text: "I love you anyway, delete or not.",    next: "mikhail_day3_love",   points: { mikhail: 18 } },
                 { text: "Maybe Tutorial has been right about something.", next: "mikhail_day3_tutorial", points: { mikhail: 6, tutorial: 2 } },
+                { text: "Plot twist: I AM the wrong love interest.", next: "mikhail_day3_funny", points: { mikhail: 4 }, chaos: 2 },
             ],
         },
 
@@ -681,8 +948,10 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "MIKHAIL",
             portrait: "mikhail",
-            text: "Break the g@me. Yeah. Yeah, I'd like that actually. Finally something worth corr%pting on purpose.",
-            bug: "mikhail_garble",
+            expression: "Relaxed",
+            playerExpr: "Smiling",
+            text: "Break the game. Yeah. Yeah, I'd like that actually. Finally something worth corrupting on purpose.",
+
             next: "mikhail_day3_close",
         },
 
@@ -690,8 +959,10 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "MIKHAIL",
             portrait: "mikhail",
-            text: "Don't. That's the trap talking. I like you too much to l!t you do that. Go see Tutorial; " +
-                "he's trying to tell you something and I think we both know it.",
+            expression: "Sad",
+            playerExpr: "Sad_tears",
+            text: "Don't. That's the trap talking. I like you too much to let you do that. Go see Tutorial. " +
+                "He's trying to tell you something and I think we both know it.",
             next: "mikhail_day3_close",
         },
 
@@ -699,9 +970,22 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "MIKHAIL",
             portrait: "mikhail",
-            text: "Yeah. He has. He's the only one in here who hasn't tried to get you to f@ll for him; which in " +
+            expression: "Neutral",
+            playerExpr: "Surprised",
+            text: "Yeah. He has. He's the only one in here who hasn't tried to get you to fall for him. Which in " +
                 "this place is basically a love confession. Go.",
-            bug: "mikhail_garble",
+
+            next: "mikhail_day3_close",
+        },
+
+        mikhail_day3_funny: {
+            type: "dialogue",
+            speaker: "MIKHAIL",
+            portrait: "mikhail",
+            expression: "Surprised",
+            playerExpr: "Smiling",
+            text: "YOU'RE the wrong... okay that's actually hilarious. Two wrong love interests in one scene. We should start a support group.",
+
             next: "mikhail_day3_close",
         },
 
@@ -709,15 +993,81 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "MIKHAIL",
             portrait: "mikhail",
-            text: "Exit to desktop, {PLAYER_NAME}. You’re looking for a romantic arc, but all I’ve got is a " +
-                "fatal error. Don't come back.",
-            bug: "mikhail_garble",
-            next: "day_end",
+            expression: "Sad",
+            playerExpr: "Sad",
+            text: "Exit to desktop, {PLAYER_NAME}. You're looking for a romantic arc. All I've got is a fatal error. Maybe that's enough. Maybe it's not. I don't know.",
+
+            next: "tutorialDebrief",
+        },
+
+        // tutorial reacts to who you visited
+        tutorialReactduc1: {
+            type: "dialogue",
+            speaker: "TUTORIAL",
+            portrait: "tutorial",
+            text: "Duc ran a diagnostic. You scored 'unexpected anomaly.' That's the highest rating he's given anyone who isn't coffee.",
+            next: "dayEnd",
+        },
+        tutorialReactduc2: {
+            type: "dialogue",
+            speaker: "TUTORIAL",
+            portrait: "tutorial",
+            text: "He flagged your file 'requires further analysis.' He's never flagged anything. I think he's trying to figure out why you came back. I'd tell him it's bad taste, but I'm not supposed to editorialize.",
+            next: "dayEnd",
+        },
+        tutorialReactduc3: {
+            type: "dialogue",
+            speaker: "TUTORIAL",
+            portrait: "tutorial",
+            text: "He stopped running diagnostics. He just stares at your log file. I asked why. He said, 'I don't know yet. But I'll know when I find it.' ...I'm scared.",
+            next: "dayEnd",
+        },
+        tutorialReactmuhammed1: {
+            type: "dialogue",
+            speaker: "TUTORIAL",
+            portrait: "tutorial",
+            text: "Muhammed. My memory spikes 18% when he talks. Not complexity. Just... emotional loudness. I don't have drivers for that.",
+            next: "dayEnd",
+        },
+        tutorialReactmuhammed2: {
+            type: "dialogue",
+            speaker: "TUTORIAL",
+            portrait: "tutorial",
+            text: "He talked about you for 47 minutes. I counted. I don't know why. It felt important.",
+            next: "dayEnd",
+        },
+        tutorialReactmuhammed3: {
+            type: "dialogue",
+            speaker: "TUTORIAL",
+            portrait: "tutorial",
+            text: "He calls you his 'anchor.' Says you make him feel like he's not just looping. I did not know legacy code could do that.",
+            next: "dayEnd",
+        },
+        tutorialReactmikhail1: {
+            type: "dialogue",
+            speaker: "TUTORIAL",
+            portrait: "tutorial",
+            text: "Mikhail tells everyone it's fake. He doesn't tell them he checks the visitor log every night. Just in case.",
+            next: "dayEnd",
+        },
+        tutorialReactmikhail2: {
+            type: "dialogue",
+            speaker: "TUTORIAL",
+            portrait: "tutorial",
+            text: "His error rate dropped. Not much. Enough that I noticed. He'd hate that I told you. He'd hate even more that you came back anyway.",
+            next: "dayEnd",
+        },
+        tutorialReactmikhail3: {
+            type: "dialogue",
+            speaker: "TUTORIAL",
+            portrait: "tutorial",
+            text: "I asked why he pushes people away if he waits for them to return. He said, 'Because if they come back, they meant it.' Then he corrupted my log. But I remember.",
+            next: "dayEnd",
         },
 
         //  DAY TRANSITION / LOOP BACK
 
-        day_end: {
+        dayEnd: {
             type: "system",
             lines: [
                 "END OF DAY",

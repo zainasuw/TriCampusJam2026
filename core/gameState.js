@@ -1,6 +1,5 @@
-// global game state. tracks relationship points, day count, who the player has met
-// points scale: 10 points = 1 heart. 5 hearts (50 pts) with a bachelor = DEFEAT
-// 10 points total with Tutorial = VICTORY
+// global game state -- tracks relationship points, day count, who the player has met
+// 10 pts = 1 heart. 35 pts with a bachelor = DEFEAT, 18 pts with Tutorial = VICTORY
 
 const GameState = {
     playerName: "UNKNOWN",
@@ -11,6 +10,8 @@ const GameState = {
         mikhail: 0,
         tutorial: 0,
     },
+    chaosPoints: 0,
+    glitchLog: [],
     // has player met / unlocked a character's card? (for 'I' screen)
     metCharacters: {
         duc: false,
@@ -26,6 +27,8 @@ const GameState = {
     },
     // who did the player visit today? prevents picking the same bachelor twice in one day
     visitedToday: null,
+    lockedBachelor: null,
+    memories: [],
 
     // flag sets for one-time rewards
     flagsGame: {},   // persistent for the whole run
@@ -34,8 +37,9 @@ const GameState = {
     // thresholds
     HEART_VALUE: 10,
     MAX_HEARTS: 5,
-    BACHELOR_MAX_POINTS: 50,   // 5 hearts * 10 = defeat
-    TUTORIAL_WIN_POINTS: 10,   // escape condition
+    BACHELOR_MAX_POINTS: 35,   // 3.5 hearts = defeat
+    TUTORIAL_WIN_POINTS: 18,   // gotta work for it across all 3 days
+    CHAOS_THRESHOLD: 15,       // high chaos unlocks TRANSCEND ending
 
     // Helpers
     addPoints(character, amount) {
@@ -43,6 +47,29 @@ const GameState = {
         this.relationshipPoints[character] = Math.max(
             0, this.relationshipPoints[character] + amount
         );
+    },
+
+    addChaos(amount, reason) {
+        this.chaosPoints += amount;
+        if (reason) {
+            this.glitchLog.push({
+                day: this.currentDay,
+                event: reason,
+                chaos: amount,
+            });
+        }
+    },
+
+    isHighChaos() {
+        return this.chaosPoints >= this.CHAOS_THRESHOLD;
+    },
+
+    addMemory(tag) {
+        if (!this.memories.includes(tag)) this.memories.push(tag);
+    },
+
+    hasMemory(tag) {
+        return this.memories.includes(tag);
     },
 
     hasFlag(flag, scope) {
@@ -63,10 +90,12 @@ const GameState = {
 
     checkEnding() {
         if (this.relationshipPoints.tutorial >= this.TUTORIAL_WIN_POINTS) {
+            if (this.isHighChaos()) return "TRANSCEND";
             return "VICTORY";
         }
         for (const name of ["duc", "muhammed", "mikhail"]) {
             if (this.relationshipPoints[name] >= this.BACHELOR_MAX_POINTS) {
+                this.lockedBachelor = name;
                 return "DEFEAT";
             }
         }
@@ -83,9 +112,13 @@ const GameState = {
         this.playerName = "UNKNOWN";
         this.currentDay = 1;
         this.relationshipPoints = { duc: 0, muhammed: 0, mikhail: 0, tutorial: 0 };
+        this.chaosPoints = 0;
+        this.glitchLog = [];
         this.metCharacters = { duc: false, muhammed: false, mikhail: false, tutorial: false };
         this.visitCounts = { duc: 0, muhammed: 0, mikhail: 0 };
         this.visitedToday = null;
+        this.lockedBachelor = null;
+        this.memories = [];
         this.flagsGame = {};
         this.flagsDay = {};
     },

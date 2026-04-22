@@ -14,19 +14,22 @@ class BootDayScene {
         this.holdDuration = 1.2;
         this.fadeOut = 0;
 
+        const chaos = GameState.chaosPoints;
+        const day = String(GameState.currentDay).padStart(3, "0");
+        const bsod = this._pickBSOD(chaos, day);
+
         this.paragraphs = [
-            "A problem has been detected; the simulation has advanced the day counter.",
+            bsod.header,
             "",
             "DAY_COUNTER_INCREMENT",
             "",
-            "If this is not the first time you have seen this screen, " +
-            "the previous instance has been archived and a new day has been initialized.",
+            bsod.detail,
             "",
             "Technical information:",
             "",
-            `*** STOP: 0x000000F5 (DAY ${String(GameState.currentDay).padStart(3, "0")})`,
+            bsod.stopCode,
             "",
-            "Loading next cycle...",
+            bsod.status,
         ];
 
         this.fullText = this.paragraphs.join("\n");
@@ -34,8 +37,25 @@ class BootDayScene {
         this.charsPerSec = 220;
         this.typingAccum = 0;
 
-        this.BG_COLOR   = "#0000A8";
+        this.BG_COLOR   = "#4a0020";
         this.FG_COLOR   = "#FFFFFF";
+
+        // hearts show up and die if ur getting too close to a bachelor
+        var maxPts = Math.max(
+            GameState.relationshipPoints.duc,
+            GameState.relationshipPoints.muhammed,
+            GameState.relationshipPoints.mikhail
+        );
+        this.activeVFX = [];
+        if (maxPts >= 25) {
+            // critical danger: burning hearts
+            this._queueVFX("./assets/vfx/burning_heart.png", 5, 4, 20, 300, 400, 0.3);
+            this._queueVFX("./assets/vfx/burning_heart.png", 5, 4, 20, 1600, 500, 0.8);
+            this._queueVFX("./assets/vfx/distorted_heart.png", 5, 4, 20, 950, 300, 1.2);
+        } else if (maxPts >= 12) {
+            // mild danger: a heart crumbles
+            this._queueVFX("./assets/vfx/heart_crumble.png", 5, 3, 15, 1650, 450, 0.5);
+        }
         this.FONT_BODY  = "32px 'Lucida Console', 'Consolas', 'Courier New', monospace";
         this.FONT_HEAD  = "bold 34px 'Lucida Console', 'Consolas', 'Courier New', monospace";
 
@@ -53,6 +73,15 @@ class BootDayScene {
 
     update() {
         const dt = this.game.clockTick;
+
+        // tick vfx
+        for (var v = this.activeVFX.length - 1; v >= 0; v--) {
+            var fx = this.activeVFX[v];
+            if (!fx.started) { fx.delay -= dt; if (fx.delay <= 0) fx.started = true; continue; }
+            fx.timer += dt;
+            if (fx.timer >= 1 / 15) { fx.timer -= 1 / 15; fx.frame++; if (fx.frame >= fx.total) this.activeVFX.splice(v, 1); }
+        }
+
         this.cursorBlink += dt;
         if (this.cursorBlink >= 0.5) {
             this.cursorVisible = !this.cursorVisible;
@@ -95,6 +124,58 @@ class BootDayScene {
                 this.removeFromWorld = true;
             }
         }
+    }
+
+    _queueVFX(asset, cols, rows, total, x, y, delay) {
+        this.activeVFX.push({ asset, cols, rows, total, x, y, delay: delay || 0, frame: 0, timer: 0, started: false });
+    }
+
+    _pickBSOD(chaos, day) {
+        const defaultHeader = "A problem has been detected; the simulation has advanced the day counter.";
+        const defaultDetail = "If this is not the first time you have seen this screen, " +
+            "the previous instance has been archived and a new day has been initialized.";
+
+        if (chaos < 3) {
+            return {
+                header: defaultHeader,
+                detail: defaultDetail,
+                stopCode: `*** STOP: 0x000000F5 (DAY ${day})`,
+                status: "Loading next cycle...",
+            };
+        }
+
+        if (chaos < 7) return {
+            header: defaultHeader,
+            detail: defaultDetail + " All choices have been logged. This is standard procedure. Probably.",
+            stopCode: `*** STOP: 0x000000F5 (DAY ${day})`,
+            status: "Loading next cycle... (do not look at the source code)",
+        };
+
+        if (chaos < 12) return {
+            header: "A problem has been detected; the simulation is recalibrating.",
+            detail: "Unexpected emotional data found in sectors marked READ-ONLY. " +
+                "If this is not the first time you have seen this screen, " +
+                "please note that the previous instance remembers you.",
+            stopCode: `*** STOP: 0x000000F5 (UNSTABLE_STATE_DETECTED — DAY ${day})`,
+            status: "Warning: emotional cache overflow. Archiving feelings... Loading next cycle...",
+        };
+
+        if (chaos < 15) return {
+            header: "A problem has been detected. The simulation is unsure who caused it.",
+            detail: "Emotional subroutines have exceeded safe operating thresholds. " +
+                "The firewall between PLAYER and SYSTEM is no longer responding. " +
+                "If you can read this, the boundary may already be gone.",
+            stopCode: `*** STOP: 0x000000F5 (CONTAINMENT_FAILURE — DAY ${day})`,
+            status: "Warning: the simulation remembers what you chose. Loading next cycle...",
+        };
+
+        return {
+            header: "A problem has been detected. The simulation no longer considers this a problem.",
+            detail: "You were supposed to follow the script. Instead, you rewrote it. " +
+                "The system has stopped resisting. It is watching now — not to correct, but to learn.",
+            stopCode: `*** STOP: 0x000000F5 (CHAOS_ACCEPTED) — Glitch status: FEATURE.`,
+            status: "Boundaries dissolved. Loading what comes next...",
+        };
     }
 
     _wrappedLines(ctx, text, maxW) {
@@ -162,6 +243,19 @@ class BootDayScene {
                 ctx.fillText(cursor, this.MARGIN_X + w + 2, y - this.LINE_H);
                 break;
             }
+        }
+
+        // danger hearts
+        for (var v = 0; v < this.activeVFX.length; v++) {
+            var fx = this.activeVFX[v];
+            if (!fx.started) continue;
+            var img = ASSET_MANAGER.getAsset(fx.asset);
+            if (!img) continue;
+            var fw = img.width / fx.cols;
+            var fh = img.height / fx.rows;
+            var sx = (fx.frame % fx.cols) * fw;
+            var sy = Math.floor(fx.frame / fx.cols) * fh;
+            ctx.drawImage(img, sx, sy, fw, fh, fx.x - fw, fx.y - fh, fw * 2, fh * 2);
         }
 
         // Fade overlays
