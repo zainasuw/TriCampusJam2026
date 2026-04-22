@@ -33,12 +33,29 @@ ASSET_MANAGER.queueDownload("./assets/DatingGameUI/Messaging/MessagingBackground
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/NextBtn.png");
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/NextBtnPressed.png");
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/Settings/SettingsBackground.png");
+ASSET_MANAGER.queueDownload("./assets/DatingGameUI/Settings/MasterVolumeContainer.png");
+ASSET_MANAGER.queueDownload("./assets/DatingGameUI/Settings/SoundSettingsContainer.png");
+ASSET_MANAGER.queueDownload("./assets/DatingGameUI/Settings/VolumeBarEmpty.png");
+ASSET_MANAGER.queueDownload("./assets/DatingGameUI/Settings/VolumeFill.png");
+ASSET_MANAGER.queueDownload("./assets/DatingGameUI/Settings/VolumeKnob.png");
+ASSET_MANAGER.queueDownload("./assets/DatingGameUI/Settings/Switch.png");
+ASSET_MANAGER.queueDownload("./assets/DatingGameUI/Settings/SwitchBackground.png");
+ASSET_MANAGER.queueDownload("./assets/DatingGameUI/Messaging/MessageBubble.png");
+ASSET_MANAGER.queueDownload("./assets/DatingGameUI/Messaging/NotificationBackground.png");
+ASSET_MANAGER.queueDownload("./assets/DatingGameUI/CharacterScreen/LargeTextContainer.png");
+ASSET_MANAGER.queueDownload("./assets/DatingGameUI/CharacterScreen/SmallTextContainer.png");
+ASSET_MANAGER.queueDownload("./assets/DatingGameUI/Messaging/CharacterContainer.png");
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/VictoryOrDefeat/VictoryTitleContainer.png");
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/VictoryOrDefeat/DefeatTitleContainer.png");
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/VictoryOrDefeat/TextContainer.png");
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/VictoryOrDefeat/ContinueBtn.png");
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/VictoryOrDefeat/ContinueBtnPressed.png");
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/Background.jpg");
+ASSET_MANAGER.queueDownload("./assets/DatingGameUI/VictoryOrDefeat/BlueBtn.png");
+ASSET_MANAGER.queueDownload("./assets/DatingGameUI/VictoryOrDefeat/BlueBtnPressed.png");
+ASSET_MANAGER.queueDownload("./assets/DatingGameUI/VictoryOrDefeat/RedBtn.png");
+ASSET_MANAGER.queueDownload("./assets/DatingGameUI/VictoryOrDefeat/RedBtnPressed.png");
+
 
 const GUY_EXPRESSIONS = ["Neutral", "Angry", "Sad", "Surprised", "Relaxed", "Blink"];
 for (const expr of GUY_EXPRESSIONS) {
@@ -57,6 +74,24 @@ for (const expr of GIRL_EXPRESSIONS) {
 }
 ASSET_MANAGER.queueDownload("./assets/characters/girl1/Face.png");
 
+// VFX sprite sheets
+ASSET_MANAGER.queueDownload("./assets/vfx/hearts_rising.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/heart_crumble.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/analysis_error.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/hearts_sparkle.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/touch_effect.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/heart_stamp.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/burning_heart.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/heart_explosion.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/frozen_heart.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/distorted_heart.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/analysis.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/analysis_success.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/heart_fireworks.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/heart_pulse.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/heart_form.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/pink_burst.png");
+
 ASSET_MANAGER.downloadAll(() => {
 	const canvas = document.getElementById("gameWorld");
 	const ctx = canvas.getContext("2d");
@@ -71,7 +106,7 @@ class HomeScreen {
 		this.removeFromWorld = false;
 
 		// assets
-		this.bg     = ASSET_MANAGER.getAsset("./assets/DatingGameUI/HomeScreen/HomeScreenBackground.jpg");
+		this.bg = ASSET_MANAGER.getAsset("./assets/DatingGameUI/HomeScreen/HomeScreenBackground.jpg");
 		this.btnImg = ASSET_MANAGER.getAsset("./assets/DatingGameUI/HomeScreen/Button.png");
 		this.btnPrs = ASSET_MANAGER.getAsset("./assets/DatingGameUI/HomeScreen/ButtonPressed.png");
 
@@ -96,20 +131,20 @@ class HomeScreen {
 		this.gearPressed = false;
 
 		// title geometry
-		this.titleY      = 300;
-		this.subtitleY   = 410;
+		this.titleY = 300;
+		this.subtitleY = 410;
 
 		// Animation state
-		this.state        = "idle";
-		this.animTimer    = 0;
+		this.state = "idle";
+		this.animTimer = 0;
 		this.animDuration = 0.9;
 
-		this.titleSlide  = -420;
-		this.btnSlide    = 400;
+		this.titleSlide = -420;
+		this.btnSlide = 400;
 
 		this.titleOffset = 0;
-		this.btnOffset   = 0;
-		this.opacity     = 1;
+		this.btnOffset = 0;
+		this.opacity = 1;
 
 		this.hovered = false;
 		this.pressed = false;
@@ -124,7 +159,7 @@ class HomeScreen {
 	isHit(mx, my) {
 		const by = this.btnY + this.btnOffset;
 		return mx >= this.btnX && mx <= this.btnX + this.btnW &&
-			my >= by        && my <= by + this.btnH;
+			my >= by && my <= by + this.btnH;
 	}
 
 	isGearHit(mx, my) {
@@ -133,23 +168,27 @@ class HomeScreen {
 			my >= g.y && my <= g.y + g.h;
 	}
 
-	easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+	easeOut(t) {
+		return 1 - Math.pow(1 - t, 3);
+	}
 
 	update() {
-		const dt    = this.game.clockTick;
+		const dt = this.game.clockTick;
 		const mouse = this.game.mouse;
 		const click = this.game.click;
 
 		if (this.state === "idle") {
-			this.hovered     = mouse ? this.isHit(mouse.x, mouse.y) : false;
+			this.hovered = mouse ? this.isHit(mouse.x, mouse.y) : false;
 			this.gearHovered = mouse ? this.isGearHit(mouse.x, mouse.y) : false;
 
 			if (click && this.isGearHit(click.x, click.y)) {
 				// open Settings as an overlay, home stays alive beneath it.
 				MUSIC.unlock();
-				
+
 				this.gearPressed = true;
-				setTimeout(() => { this.gearPressed = false; }, 120);
+				setTimeout(() => {
+					this.gearPressed = false;
+				}, 120);
 				this.game.addEntity(new SettingsScene(this.game, this));
 				this.game.click = null;
 				return;
@@ -157,9 +196,9 @@ class HomeScreen {
 
 			if (click && this.isHit(click.x, click.y)) {
 				MUSIC.unlock();
-				
+
 				this.pressed = true;
-				this.state   = "animating";
+				this.state = "animating";
 				this.game.click = null;
 			}
 
@@ -169,8 +208,8 @@ class HomeScreen {
 			const e = this.easeOut(t);
 
 			this.titleOffset = this.titleSlide * e;
-			this.btnOffset   = this.btnSlide   * e;
-			this.opacity     = 1 - e;
+			this.btnOffset = this.btnSlide * e;
+			this.opacity = 1 - e;
 
 			if (t >= 1) {
 				this.state = "done";
@@ -181,8 +220,8 @@ class HomeScreen {
 				GameState.reset();
 				// background music start has been moved to NameInputScene so it no longer interrupts the BSOD typing sounds
 				MUSIC.stopAllMusic();
-				
-				this.game.addEntity(new NameInputScene(this.game));
+
+				this.game.addEntity(new GlitchIntroScene(this.game));
 				this.removeFromWorld = true;
 			}
 		}
@@ -191,9 +230,6 @@ class HomeScreen {
 	draw(ctx) {
 		if (this.bg) {
 			ctx.drawImage(this.bg, 0, 0, this.W, this.H);
-		} else {
-			ctx.fillStyle = "#fce4f0";
-			ctx.fillRect(0, 0, this.W, this.H);
 		}
 
 		if (this.state === "done") {
@@ -205,7 +241,7 @@ class HomeScreen {
 		ctx.save();
 		ctx.globalAlpha = this.opacity;
 
-		const curTitleY    = this.titleY    + this.titleOffset;
+		const curTitleY = this.titleY + this.titleOffset;
 		const curSubtitleY = this.subtitleY + this.titleOffset;
 
 		ctx.textAlign = "center";
@@ -213,27 +249,27 @@ class HomeScreen {
 		ctx.font = "bold 108px 'The Bold Font', Georgia, serif";
 		ctx.fillStyle = "#ffffff";
 		ctx.shadowColor = "rgba(220, 80, 140, 0.85)";
-		ctx.shadowBlur  = 28;
+		ctx.shadowBlur = 28;
 
 		const titleText = "DATING SIMULATOR!";
 		let totalWidth = ctx.measureText(titleText).width;
 		let startX = (this.W / 2) - (totalWidth / 2);
-		
+
 		ctx.textAlign = "left";
-		
+
 		const elapsedTime = (Date.now() - (this.startTime || Date.now())) / 1000;
-		const timeInCycle = elapsedTime % 3.0; 
-		
+		const timeInCycle = elapsedTime % 3.0;
+
 		for (let i = 0; i < titleText.length; i++) {
 			const char = titleText[i];
 			const charWidth = ctx.measureText(char).width;
-			
+
 			let bounceY = 0;
 			const p = timeInCycle - i * 0.1;
 			if (p > 0 && p < 0.5) {
 				bounceY = Math.sin((p / 0.5) * Math.PI) * -30;
 			}
-			
+
 			ctx.fillText(char, startX, curTitleY + bounceY);
 			startX += charWidth;
 		}
@@ -245,14 +281,12 @@ class HomeScreen {
 		ctx.fillText("It's a Romance, Not a Bug ;)", this.W / 2, curSubtitleY);
 
 		const curBtnY = this.btnY + this.btnOffset;
-		const sprite  = this.pressed ? this.btnPrs : this.btnImg;
+		const sprite = this.pressed ? this.btnPrs : this.btnImg;
 
 		if (sprite) {
 			ctx.drawImage(sprite, this.btnX, curBtnY, this.btnW, this.btnH);
-		} else {
-			ctx.fillStyle = this.hovered ? "#cc5599" : "#e070aa";
-			ctx.fillRect(this.btnX, curBtnY, this.btnW, this.btnH);
 		}
+
 
 		ctx.font = "bold 32px 'The Bold Font', 'Roboto', sans-serif";
 		ctx.fillStyle = "#ffffff";
@@ -263,86 +297,33 @@ class HomeScreen {
 
 		if (this.hovered && this.state === "idle") {
 			ctx.strokeStyle = "rgba(255, 180, 220, 0.7)";
-			ctx.lineWidth   = 4;
+			ctx.lineWidth = 4;
 			ctx.strokeRect(this.btnX - 4, curBtnY - 4, this.btnW + 8, this.btnH + 8);
 		}
 
 		// green gear button bottom right corner opens SettingsScene overlay
-		this._drawGearButton(ctx);
+		this.drawGearButton(ctx);
 
 		ctx.restore();
 	}
 
-	_drawGearButton(ctx) {
-		const g = this.gearBtn;
-
-		// prefer Settings icon asset if present; otherwise draw a
-		// green parallelogram with a vector gear so it still renders.
-		const gearAsset    = ASSET_MANAGER.getAsset("./assets/DatingGameUI/Icons/Settings.png");
-		const greenBtn     = ASSET_MANAGER.getAsset(this.gearPressed
+	drawGearButton(ctx) {
+		var g = this.gearBtn;
+		var greenBtn = ASSET_MANAGER.getAsset(this.gearHovered
 			? "./assets/DatingGameUI/GreenBtnPressed.png"
 			: "./assets/DatingGameUI/GreenBtn.png");
+		var gearIcon = ASSET_MANAGER.getAsset("./assets/DatingGameUI/Icons/Settings.png");
 
 		if (greenBtn) {
 			ctx.drawImage(greenBtn, g.x, g.y, g.w, g.h);
-		} else {
-			// fallback draw green parallelogram
-			const skew = 18;
-			ctx.beginPath();
-			ctx.moveTo(g.x + skew, g.y);
-			ctx.lineTo(g.x + g.w,  g.y);
-			ctx.lineTo(g.x + g.w - skew, g.y + g.h);
-			ctx.lineTo(g.x,        g.y + g.h);
-			ctx.closePath();
-			ctx.fillStyle = this.gearHovered ? "#6bc870" : "#7ed082";
-			ctx.fill();
-			ctx.strokeStyle = "#4a9a52";
-			ctx.lineWidth = 3;
-			ctx.stroke();
 		}
-
-		const cx = g.x + g.w / 2;
-		const cy = g.y + g.h / 2;
-
-		if (gearAsset) {
-			// background white dot when closed
-			ctx.beginPath();
-			ctx.arc(cx, cy, 8, 0, Math.PI * 2);
-			ctx.fillStyle = "#ffffff";
-			ctx.fill();
-
-			// draw gear proportionally
-			const scale = 56 / Math.max(gearAsset.width || 56, gearAsset.height || 56);
-			const w = (gearAsset.width || 56) * scale;
-			const h = (gearAsset.height || 56) * scale;
-			ctx.drawImage(gearAsset, cx - w / 2, cy - h / 2, w, h);
-		} else {
-			// vector gear fallback
-			ctx.save();
-			ctx.fillStyle = "#ffffff";
-			const teeth = 8, outer = 22, inner = 15, tooth = 5;
-			ctx.beginPath();
-			for (let i = 0; i < teeth * 2; i++) {
-				const ang = (i / (teeth * 2)) * Math.PI * 2;
-				const radius = (i % 2 === 0) ? outer + tooth : outer;
-				const px = cx + Math.cos(ang) * radius;
-				const py = cy + Math.sin(ang) * radius;
-				if (i === 0) ctx.moveTo(px, py);
-				else         ctx.lineTo(px, py);
-			}
-			ctx.closePath();
-			ctx.fill();
-			ctx.globalCompositeOperation = "destination-out";
-			ctx.beginPath();
-			ctx.arc(cx, cy, inner - 4, 0, Math.PI * 2);
-			ctx.fill();
-			ctx.restore();
-		}
-
-		if (this.gearHovered) {
-			ctx.strokeStyle = "rgba(120, 220, 140, 0.8)";
-			ctx.lineWidth = 3;
-			ctx.strokeRect(g.x - 3, g.y - 3, g.w + 6, g.h + 6);
+		if (gearIcon) {
+			var cx = g.x + g.w / 2;
+			var cy = g.y + g.h / 2;
+			var scale = 56 / Math.max(gearIcon.width || 56, gearIcon.height || 56);
+			var w = (gearIcon.width || 56) * scale;
+			var h = (gearIcon.height || 56) * scale;
+			ctx.drawImage(gearIcon, cx - w / 2, cy - h / 2, w, h);
 		}
 	}
 }

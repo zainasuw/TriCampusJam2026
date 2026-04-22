@@ -9,20 +9,23 @@ class SettingsScene {
         this.closing = false;
 
         // panel geometry canvas is 1920x1080
-        this.PANEL = { x: 260, y: 130, w: 1400, h: 820 };
+        this.PANEL = {x: 260, y: 130, w: 1400, h: 820};
 
         // back arrow button top left of screen
-        this.BACK_BTN = { x: 40, y: 40, w: 140, h: 90 };
+        this.BACK_BTN = {x: 40, y: 40, w: 140, h: 90};
 
         // gear icon button bottom right of screen
-        this.GEAR_BTN = { x: 1920 - 180, y: 1080 - 120, w: 140, h: 90 };
+        this.GEAR_BTN = {x: 1920 - 180, y: 1080 - 120, w: 140, h: 90};
 
         // master volume slider
         this.MASTER = {
             label: "MASTER VOLUME",
             x: 520, y: 330, w: 880, h: 40,
             getter: () => MUSIC.masterVolume,
-            setter: v => { MUSIC.masterVolume = v; MUSIC.applyVolumes(); },
+            setter: v => {
+                MUSIC.masterVolume = v;
+                MUSIC.applyVolumes();
+            },
         };
 
         // sound effects slider
@@ -30,7 +33,10 @@ class SettingsScene {
             label: "Sound Effects Volume",
             x: 520, y: 700, w: 880, h: 40,
             getter: () => MUSIC.sfxVolume,
-            setter: v => { MUSIC.sfxVolume = v; MUSIC.applyVolumes(); },
+            setter: v => {
+                MUSIC.sfxVolume = v;
+                MUSIC.applyVolumes();
+            },
         };
 
         // music volume slider
@@ -38,14 +44,15 @@ class SettingsScene {
             label: "Music Volume",
             x: 520, y: 820, w: 880, h: 40,
             getter: () => MUSIC.musicVolume,
-            setter: v => { MUSIC.musicVolume = v; MUSIC.applyVolumes(); },
+            setter: v => {
+                MUSIC.musicVolume = v;
+                MUSIC.applyVolumes();
+            },
         };
 
-        // toggles
-        this.DIALOGUE_ON  = { x: 680,  y: 570, w: 90, h: 60 };
-        this.DIALOGUE_OFF = { x: 780,  y: 570, w: 90, h: 60 };
-        this.MUSIC_ON     = { x: 1030, y: 570, w: 90, h: 60 };
-        this.MUSIC_OFF    = { x: 1130, y: 570, w: 90, h: 60 };
+        // toggles - matching background asset
+        this.DIALOGUE_TOGGLE = {x: 700, y: 570, w: 149, h: 53};
+        this.MUSIC_TOGGLE = {x: 1050, y: 570, w: 149, h: 53};
 
         this.draggingSlider = null;
 
@@ -86,7 +93,7 @@ class SettingsScene {
 
         const mouse = this.game.mouse;
         const click = this.game.click;
-        
+
         // track gear hover inside settings so button changes correctly
         this.gearHovered = mouse ? this._hit(this.GEAR_BTN, mouse) : false;
 
@@ -99,7 +106,7 @@ class SettingsScene {
                     // initial jump
                     const pct = Math.max(0, Math.min(1, (mouse.x - s.x) / s.w));
                     s.setter(pct);
-                    
+
                 }
             }
         }
@@ -119,7 +126,7 @@ class SettingsScene {
         if (click) {
             // toggle close the gear button
             if (this._hit(this.GEAR_BTN, click)) {
-                
+
                 this.closing = true;
                 this.fadeDir = -1;
                 this.game.click = null;
@@ -128,7 +135,7 @@ class SettingsScene {
 
             // back arrow to close settings
             if (this._hit(this.BACK_BTN, click)) {
-                
+
                 this.closing = true;
                 this.fadeDir = -1;
                 this.game.click = null;
@@ -136,10 +143,19 @@ class SettingsScene {
             }
 
             // toggles
-            if (this._hit(this.DIALOGUE_ON, click))  {  MUSIC.dialogueOn = true;  MUSIC.applyVolumes(); this.game.click = null; return; }
-            if (this._hit(this.DIALOGUE_OFF, click)) {  MUSIC.dialogueOn = false; MUSIC.applyVolumes(); this.game.click = null; return; }
-            if (this._hit(this.MUSIC_ON, click))     {  MUSIC.musicOn = true;     MUSIC.applyVolumes(); this.game.click = null; return; }
-            if (this._hit(this.MUSIC_OFF, click))    {  MUSIC.musicOn = false;    MUSIC.applyVolumes(); this.game.click = null; return; }
+            if (this._hit(this.DIALOGUE_TOGGLE, click)) {
+                MUSIC.dialogueOn = !MUSIC.dialogueOn;
+                MUSIC.applyVolumes();
+                this.game.click = null;
+                return;
+            }
+            if (this._hit(this.MUSIC_TOGGLE, click)) {
+                MUSIC.musicOn = !MUSIC.musicOn;
+                MUSIC.applyVolumes();
+                this.game.click = null;
+                return;
+            }
+
 
             // anywhere else eat the click don't let it fall through
             this.game.click = null;
@@ -159,64 +175,76 @@ class SettingsScene {
         ctx.save();
         ctx.globalAlpha = this.fadeAlpha;
 
-        // back arrow blue parallelogram
-        this._drawSlantButton(ctx, this.BACK_BTN, "#6bb3f0", "#3a7dc4", "arrow");
+        //Back arrow button
+        var blueBtn = ASSET_MANAGER.getAsset("./assets/DatingGameUI/ExitPopup/BlueBtn.png");
+        var backArrow = ASSET_MANAGER.getAsset("./assets/DatingGameUI/Icons/BackArrow.png");
+        if (blueBtn) {
+            ctx.drawImage(blueBtn, this.BACK_BTN.x, this.BACK_BTN.y, this.BACK_BTN.w, this.BACK_BTN.h);
+        }
 
-        // gear icon in bottom right green parallelogram
-        this._drawGearButton(ctx);
+
+        if (backArrow) {
+            ctx.drawImage(backArrow, this.BACK_BTN.x + 20, this.BACK_BTN.y + 20, 70, 70);
+        }
+
+        //Gear button
+        this.drawGearButton(ctx);
 
         // settings title
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.font = "bold 84px 'The Bold Font', Georgia, serif";
         ctx.fillStyle = "#ff9dc6";
+        ctx.shadowColor = "rgba(255, 160, 200, 0.5)";
+        ctx.shadowBlur = 18;
         ctx.fillText("SETTINGS", W / 2, 90);
+        ctx.shadowBlur = 0;
 
         // main translucent panel rounded w/ pink border
-        this._roundRect(ctx, this.PANEL.x, this.PANEL.y, this.PANEL.w, this.PANEL.h, 8);
-        ctx.fillStyle = "rgba(255, 255, 255, 1.0)";
-        ctx.fill();
-        ctx.strokeStyle = "#ff9dc6";
-        ctx.lineWidth = 3;
-        this._roundRect(ctx, this.PANEL.x, this.PANEL.y, this.PANEL.w, this.PANEL.h, 8);
-        ctx.stroke();
+        var settingBg = ASSET_MANAGER.getAsset("./assets/DatingGameUI/Settings/SettingsBackground.png");
+        if (settingBg) {
+            ctx.drawImage(settingBg, this.PANEL.x, this.PANEL.y, this.PANEL.w, this.PANEL.h);
+        }
 
         // master volume section
-        this._drawSectionLabel(ctx, "MASTER VOLUME", W / 2, 270);
-        this._drawSlider(ctx, this.MASTER);
+        this.drawSectionLabel(ctx, "MASTER VOLUME", W / 2, 270);
+        var masterContainer = ASSET_MANAGER.getAsset("./assets/DatingGameUI/Settings/MasterVolumeContainer.png");
+        if (masterContainer) {
+            ctx.drawImage(masterContainer, 420, 300, 1080, 120);
+        }
+
+        this.drawSlider(ctx, this.MASTER);
 
         // sound settings subsection
-        this._drawSectionLabel(ctx, "SOUND SETTINGS", W / 2, 470);
+        this.drawSectionLabel(ctx, "SOUND SETTINGS", W / 2, 470);
 
         // inner pink container for the soundsettings block
-        this._roundRect(ctx, 420, 520, 1080, 400, 6);
-        ctx.fillStyle = "rgba(255, 210, 230, 1.0)";
-        ctx.fill();
-
+        var soundContainer = ASSET_MANAGER.getAsset("./assets/DatingGameUI/Settings/SoundSettingsContainer.png");
+        if (soundContainer) {
+            ctx.drawImage(soundContainer, 420, 520, 1080, 400);
+        }
         // dialogue, Music ON-OFF toggles (not implemented yet but in case we want to add sfx in future)
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.font = "28px 'Roboto', sans-serif";
         ctx.fillStyle = "#6a6680";
         ctx.fillText("Dialogue", 775, 540);
-        ctx.fillText("Music",    1125, 540);
+        ctx.fillText("Music", 1125, 540);
 
-        this._drawToggle(ctx, this.DIALOGUE_ON,  "ON",  MUSIC.dialogueOn === true);
-        this._drawToggle(ctx, this.DIALOGUE_OFF, "OFF", MUSIC.dialogueOn === false);
-        this._drawToggle(ctx, this.MUSIC_ON,     "ON",  MUSIC.musicOn === true);
-        this._drawToggle(ctx, this.MUSIC_OFF,    "OFF", MUSIC.musicOn === false);
+        this.drawToggle(ctx, this.DIALOGUE_TOGGLE,  MUSIC.dialogueOn);
+        this.drawToggle(ctx, this.MUSIC_TOGGLE,  MUSIC.musicOn);
 
         // SFX & Music sliders live inside inner pink box
-        this._drawSliderLabel(ctx, "Sound Effects Volume", W / 2, 680);
-        this._drawSlider(ctx, this.SFX);
+        this.drawSliderLabel(ctx, "Sound Effects Volume", W / 2, 680);
+        this.drawSlider(ctx, this.SFX);
 
-        this._drawSliderLabel(ctx, "Music Volume", W / 2, 800);
-        this._drawSlider(ctx, this.MUSIC_SLIDER);
+        this.drawSliderLabel(ctx, "Music Volume", W / 2, 800);
+        this.drawSlider(ctx, this.MUSIC_SLIDER);
 
         ctx.restore();
     }
 
-    _drawSectionLabel(ctx, text, cx, cy) {
+    drawSectionLabel(ctx, text, cx, cy) {
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.font = "bold 42px 'The Bold Font', Georgia, serif";
@@ -224,7 +252,7 @@ class SettingsScene {
         ctx.fillText(text, cx, cy);
     }
 
-    _drawSliderLabel(ctx, text, cx, cy) {
+    drawSliderLabel(ctx, text, cx, cy) {
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.font = "28px 'Roboto', sans-serif";
@@ -232,216 +260,75 @@ class SettingsScene {
         ctx.fillText(text, cx, cy);
     }
 
-    _drawSlider(ctx, s) {
-        // Track
-        this._roundRect(ctx, s.x, s.y, s.w, s.h, 8);
-        ctx.fillStyle = "rgba(255, 220, 235, 0.9)";
-        ctx.fill();
-        ctx.strokeStyle = "rgba(220, 170, 200, 0.6)";
-        ctx.lineWidth = 2;
-        this._roundRect(ctx, s.x, s.y, s.w, s.h, 8);
-        ctx.stroke();
-
-        // filled portion
+    drawSlider(ctx, s) {
+        var barEmpty = ASSET_MANAGER.getAsset("./assets/DatingGameUI/Settings/VolumeBarEmpty.png");
+        var barFill = ASSET_MANAGER.getAsset("./assets/DatingGameUI/Settings/VolumeFill.png");
+        var knob = ASSET_MANAGER.getAsset("./assets/DatingGameUI/Settings/VolumeKnob.png");
         const pct = Math.max(0, Math.min(1, s.getter()));
         const fillW = s.w * pct;
-        if (fillW > 0) {
-            this._roundRect(ctx, s.x, s.y, fillW, s.h, 8);
-            ctx.fillStyle = "#4a9fe0";
-            ctx.fill();
+        const trackY = s.y + (s.h - 30) / 2;
+
+        if (barEmpty) {
+            ctx.drawImage(barEmpty, s.x, trackY, s.w, 30);
         }
 
-        // handle
-        const cx = s.x + fillW;
-        const cy = s.y + s.h / 2;
-        ctx.beginPath();
-        ctx.arc(cx, cy, 22, 0, Math.PI * 2);
-        ctx.fillStyle = "#5ab0f0";
-        ctx.fill();
-        ctx.strokeStyle = "#2a70b0";
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        //filled part
+        if (fillW > 0 && barFill) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(s.x, trackY, fillW, 30);
+            ctx.clip();
+            ctx.drawImage(barFill, s.x, trackY, s.w, 30);
+            ctx.restore();
+        }
+        //Knob
+        var cx = s.x + fillW;
+        var cy = s.y + s.h / 2;
+        if (knob) {
+            ctx.drawImage(knob, cx - 42, cy - 42, 83, 83);
+        }
 
-        // percentage readout
+        //Percentage
         ctx.textAlign = "left";
         ctx.textBaseline = "middle";
         ctx.font = "bold 26px 'Roboto', sans-serif";
         ctx.fillStyle = "#4a4660";
         ctx.fillText(Math.round(pct * 100) + "%", s.x + s.w + 20, cy);
+
     }
 
-    _drawToggle(ctx, r, label, active) {
-        this._roundRect(ctx, r.x, r.y, r.w, r.h, 4);
-        if (active) {
-            ctx.fillStyle = "#4a9fe0";
-            ctx.fill();
-            ctx.fillStyle = "#ffffff";
-        } else {
-            ctx.fillStyle = "rgba(80, 70, 100, 0.85)";
-            ctx.fill();
-            ctx.fillStyle = "#d0c8dc";
-        }
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.font = "bold 28px 'The Bold Font', sans-serif";
-        ctx.fillText(label, r.x + r.w / 2, r.y + r.h / 2);
-    }
-
-    _drawSlantButton(ctx, r, fill, border, iconKind) {
-        // Pprallelogram shape
-        const skew = 18;
-        ctx.beginPath();
-        ctx.moveTo(r.x + skew, r.y);
-        ctx.lineTo(r.x + r.w,   r.y);
-        ctx.lineTo(r.x + r.w - skew, r.y + r.h);
-        ctx.lineTo(r.x,          r.y + r.h);
-        ctx.closePath();
-        ctx.fillStyle = fill;
-        ctx.fill();
-        ctx.strokeStyle = border;
-        ctx.lineWidth = 3;
-        ctx.stroke();
-
-        ctx.save();
-        ctx.fillStyle = "#ffffff";
-        const cx = r.x + r.w / 2;
-        const cy = r.y + r.h / 2;
-        if (iconKind === "arrow") {
-            // leftward arrow
-            ctx.beginPath();
-            ctx.moveTo(cx - 22, cy);
-            ctx.lineTo(cx + 14, cy - 18);
-            ctx.lineTo(cx + 14, cy - 6);
-            ctx.lineTo(cx + 26, cy - 6);
-            ctx.lineTo(cx + 26, cy + 6);
-            ctx.lineTo(cx + 14, cy + 6);
-            ctx.lineTo(cx + 14, cy + 18);
-            ctx.closePath();
-            ctx.fill();
-        } else if (iconKind === "gear") {
-            const gearAsset = ASSET_MANAGER.getAsset("./assets/DatingGameUI/Icons/Settings.png");
-            if (gearAsset) {
-                // background black dot
-                ctx.beginPath();
-                ctx.arc(cx, cy, 8, 0, Math.PI * 2);
-                ctx.fillStyle = "#000000";
-                ctx.fill();
-
-                // draw gear proportionally
-                const scale = 56 / Math.max(gearAsset.width || 56, gearAsset.height || 56);
-                const w = (gearAsset.width || 56) * scale;
-                const h = (gearAsset.height || 56) * scale;
-                ctx.drawImage(gearAsset, cx - w / 2, cy - h / 2, w, h);
-            } else {
-                // simple gear fallback
-                const teeth = 8;
-                const outer = 22, inner = 15, tooth = 5;
-                ctx.beginPath();
-                for (let i = 0; i < teeth * 2; i++) {
-                    const ang = (i / (teeth * 2)) * Math.PI * 2;
-                    const radius = (i % 2 === 0) ? outer + tooth : outer;
-                    const px = cx + Math.cos(ang) * radius;
-                    const py = cy + Math.sin(ang) * radius;
-                    if (i === 0) ctx.moveTo(px, py);
-                    else         ctx.lineTo(px, py);
-                }
-                ctx.closePath();
-                ctx.fill();
-                // inner hole
-                ctx.globalCompositeOperation = "destination-out";
-                ctx.beginPath();
-                ctx.arc(cx, cy, inner - 4, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.globalCompositeOperation = "source-over";
-            }
-        }
-        ctx.restore();
-    }
-
-    _drawGearButton(ctx) {
-        const g = this.GEAR_BTN;
-
-        // prefer settings icon asset if present; otherwise draw green parallelogram with a vector gear so it still renders.
-        const gearAsset = ASSET_MANAGER.getAsset("./assets/DatingGameUI/Icons/Settings.png");
-        const greenBtn = ASSET_MANAGER.getAsset(this.gearHovered
+    drawGearButton(ctx) {
+        var g = this.GEAR_BTN;
+        var greenBtn = ASSET_MANAGER.getAsset(this.gearHovered
             ? "./assets/DatingGameUI/GreenBtnPressed.png"
             : "./assets/DatingGameUI/GreenBtn.png");
+        var gearIcon = ASSET_MANAGER.getAsset("./assets/DatingGameUI/Icons/Settings.png");
 
         if (greenBtn) {
             ctx.drawImage(greenBtn, g.x, g.y, g.w, g.h);
-        } else {
-            // fallback draw a green parallelogram
-            const skew = 18;
-            ctx.beginPath();
-            ctx.moveTo(g.x + skew, g.y);
-            ctx.lineTo(g.x + g.w,  g.y);
-            ctx.lineTo(g.x + g.w - skew, g.y + g.h);
-            ctx.lineTo(g.x,        g.y + g.h);
-            ctx.closePath();
-            ctx.fillStyle = this.gearHovered ? "#6bc870" : "#7ed082";
-            ctx.fill();
-            ctx.strokeStyle = "#4a9a52";
-            ctx.lineWidth = 3;
-            ctx.stroke();
         }
-
-        const cx = g.x + g.w / 2;
-        const cy = g.y + g.h / 2;
-
-        if (gearAsset) {
-            // background black dot when open inside Settings
-            ctx.beginPath();
-            ctx.arc(cx, cy, 8, 0, Math.PI * 2);
-            ctx.fillStyle = "#000000";
-            ctx.fill();
-
-            // draw gear proportionally
-            const scale = 56 / Math.max(gearAsset.width || 56, gearAsset.height || 56);
-            const w = (gearAsset.width || 56) * scale;
-            const h = (gearAsset.height || 56) * scale;
-            ctx.drawImage(gearAsset, cx - w / 2, cy - h / 2, w, h);
-        } else {
-            // vector gear fallback
-            ctx.save();
-            ctx.fillStyle = "#ffffff";
-            const teeth = 8, outer = 22, inner = 15, tooth = 5;
-            ctx.beginPath();
-            for (let i = 0; i < teeth * 2; i++) {
-                const ang = (i / (teeth * 2)) * Math.PI * 2;
-                const radius = (i % 2 === 0) ? outer + tooth : outer;
-                const px = cx + Math.cos(ang) * radius;
-                const py = cy + Math.sin(ang) * radius;
-                if (i === 0) ctx.moveTo(px, py);
-                else         ctx.lineTo(px, py);
-            }
-            ctx.closePath();
-            ctx.fill();
-            ctx.globalCompositeOperation = "destination-out";
-            ctx.beginPath();
-            ctx.arc(cx, cy, inner - 4, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
+        if (gearIcon) {
+            var cx = g.x + g.w / 2;
+            var cy = g.y + g.h / 2;
+            var scale = 56 / Math.max(gearIcon.width || 56, gearIcon.height || 56);
+            var w = (gearIcon.width || 56) * scale;
+            var h = (gearIcon.height || 56) * scale;
+            ctx.drawImage(gearIcon, cx - w / 2, cy - h / 2, w, h);
         }
+    }
+    drawToggle(ctx,toggle,isOn){
+        var switchBg = ASSET_MANAGER.getAsset("./assets/DatingGameUI/Settings/SwitchBackground.png");
+        var switchThumb = ASSET_MANAGER.getAsset("./assets/DatingGameUI/Settings/Switch.png");
 
-        if (this.gearHovered) {
-            ctx.strokeStyle = "rgba(120, 220, 140, 0.8)";
-            ctx.lineWidth = 3;
-            ctx.strokeRect(g.x - 3, g.y - 3, g.w + 6, g.h + 6);
+        if (switchBg) {
+            ctx.drawImage(switchBg, toggle.x, toggle.y, toggle.w, toggle.h);
+        }
+        if (switchThumb) {
+            var thumbW = 75;
+            var thumbX = isOn ? toggle.x + toggle.w - thumbW : toggle.x;
+            ctx.drawImage(switchThumb, thumbX, toggle.y, thumbW, toggle.h);
         }
     }
 
-    _roundRect(ctx, x, y, w, h, r) {
-        ctx.beginPath();
-        ctx.moveTo(x + r, y);
-        ctx.lineTo(x + w - r, y);
-        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-        ctx.lineTo(x + w, y + h - r);
-        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-        ctx.lineTo(x + r, y + h);
-        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-        ctx.lineTo(x, y + r);
-        ctx.quadraticCurveTo(x, y, x + r, y);
-        ctx.closePath();
-    }
+
 }
-
