@@ -1,13 +1,41 @@
+const FACE_Y_OFFSET = -22;          // negative pulls the face up into the container. tweak til it looks centered
+const FACE_X_OFFSET = 0;            // positive shifts right
+const PLAYER_FACE_Y_OFFSET = -22;
+const CHAR_SLIDE_DURATION = 0.55;   // lerp time for ENTERING and EXITING in seconds, speed or slow down
+const CHAR_OFFSCREEN_X = 1300;      // pixels past right edge where characters spawn
+const NEXT_ARROW_Y = 855;           // moved up from 890 so it doesnt overlap the dialogue box
+
+// guy2 = Muhammed, guy3 = Mikhail art. previous versions had this flipped which is why the wrong faces showed up over the wrong names
+const SPEAKER_FOLDER = {
+    "ĐỨC": "guy1",
+    "MUHAMMED": "guy2",
+    "MIKHAIL": "guy3",
+};
+
+const SPEAKER_FACE = {
+    "ĐỨC": "./assets/characters/guy1/Face.png",
+    "MUHAMMED": "./assets/characters/guy2/Face.png",
+    "MIKHAIL": "./assets/characters/guy3/Face.png",
+};
+
+// charPhase state machine for the bachelor sprite sliding, off no character on screen, entering  sliding in from off
+// screen right toward target X, speaking  fully arrived. dialogue box and text are allowed to render exiting
+// sliding back out to the right. when done, load any pending queued node
+const CHAR_PHASE_OFF = "off";
+const CHAR_PHASE_ENTERING = "entering";
+const CHAR_PHASE_SPEAKING = "speaking";
+const CHAR_PHASE_EXITING = "exiting";
+
 class DialogueScene {
     constructor(game, startNodeId) {
         this.game = game;
         this.removeFromWorld = false;
-        this.paused = false;  // set true while CharacterSheetScene / SettingsScene overlay is open
+        this.paused = false;  // true while CharacterSheetScene or SettingsScene overlay is open
 
         const data = window.DIALOGUE_DATA;
         this.data = data;
 
-        // Typing effect state
+        // typing effect state
         this.displayText = "";
         this.fullText = "";
         this.charIndex = 0;
@@ -15,33 +43,51 @@ class DialogueScene {
         this.typingSpeed = 0.025;
 
         // dialogue state
-        // phases: "typing" | "idle" | "choice" | "system" | "system_pause" | "end_trigger"
+        // phases typing,idle,choice,system,system_pause,end
         this.phase = "typing";
         this.currentSpeaker = "";
         this.currentPortrait = "";
         this.currentChoices = null;
         this.nextNodeId = null;
         this.currentNode = null;
+        this.currentNodeId = null;
 
-        // system state
+        // system screen state
         this.systemLines = [];
         this.systemLineIndex = 0;
         this.systemLineTimer = 0;
         this.pauseTimer = 0;
         this.pendingNextForSystem = null;
 
-        // bug mechanic state
-        this.muhammedLoopCount = 0;      // how many repeats have been rendered (0-2)
-        this.muhammedLoopPressed = 0;    // user has clicked Next this many times
+        // muhammed loop bug. text is shown 3 times, fresh boxes, click 3 times to escape
+        this.muhammedLoopPressed = 0;
+
+        // duc reboot shake
         this.ducShakeTimer = 0;
         this.ducShakeDuration = 0.6;
 
-        // character sprites
+        // sprites
         this.currentGuySprite = null;
         this.currentGirlSprite = null;
         this.breathTimer = 0;
         this.charOpacity = 0;
         this.playerOpacity = 0;
+
+        // tutorial blink driver. variable timing per cycle so it doesnt feel like a metronome
+        // frames 0 = open 1 = half 2 = closed
+        this.tutorialBlinkFrame = 0;
+        this.tutorialBlinkPhase = "open";   // open, closing, closed, opening
+        this.tutorialBlinkTimer = 0;
+        this.tutorialNextBlinkIn = this.rollNextBlinkDelay();
+
+        // character entrance state machine
+        this.charPhase = CHAR_PHASE_OFF;
+        this.charLerpT = 0;
+        this.charLerpDuration = CHAR_SLIDE_DURATION;
+        this.charCurrentX = CHAR_OFFSCREEN_X;
+        this.charTargetX = 0;
+        // node id queued up during an EXITING transition. cleared once loaded
+        this.pendingNodeId = null;
 
         // UI state
         this.hoveredChoice = -1;
@@ -49,41 +95,40 @@ class DialogueScene {
         this.nextBtnPressed = false;
         this.replyBtnPressedIndex = -1;
 
-        // gear button in game settings access, bottom right corner
+        // gear button bottom right corner
         this.gearBtn = {x: 1920 - 180, y: 1080 - 120, w: 140, h: 90};
         this.gearHovered = false;
         this.gearPressed = false;
 
-        // fade in
+        // scene fades
         this.fadeAlpha = 1;
         this.fadingIn = true;
-        // fade out to day transition
         this.fadingOut = false;
         this.fadeOutAlpha = 0;
-        this.fadeOutTarget = null;  // function to call when fade completes
+        this.fadeOutTarget = null;
 
-        // Layout constants (canvas is 1920x1080)
+        // layout. canvas is 1920x1080
         this.CHAR_BOX = {x: 80, y: 760, w: 210, h: 210};
         this.DLG = {x: 60, y: 740, w: 1800, h: 250};
-        this.NEXT = {x: 1730, y: 890, w: 100, h: 88};
+        this.NEXT = {x: 1730, y: NEXT_ARROW_Y, w: 100, h: 88};
         this.SPEAKER = {x: 60, y: 660, w: 380, h: 70};
 
-        // reply button grid, shown during "choice" phase
+        // reply buttons
         this.REPLY_W = 820;
         this.REPLY_H = 110;
         this.REPLY_GAP = 22;
 
-        // vfx sprite sheet stuff
+        // vfx sprite sheet definitions
         this.VFX_DEFS = {
-            hearts_rising:  { asset: "./assets/vfx/hearts_rising.png",  cols: 5, rows: 4, total: 20, fps: 15 },
-            heart_crumble:  { asset: "./assets/vfx/heart_crumble.png",  cols: 5, rows: 3, total: 15, fps: 15 },
-            analysis_error: { asset: "./assets/vfx/analysis_error.png", cols: 5, rows: 3, total: 15, fps: 15 },
-            hearts_sparkle: { asset: "./assets/vfx/hearts_sparkle.png", cols: 5, rows: 2, total: 10, fps: 15 },
-            touch_effect:   { asset: "./assets/vfx/touch_effect.png",   cols: 5, rows: 3, total: 15, fps: 15 },
-            heart_pulse:    { asset: "./assets/vfx/heart_pulse.png",    cols: 5, rows: 4, total: 20, fps: 15 },
-            heart_form:     { asset: "./assets/vfx/heart_form.png",     cols: 5, rows: 5, total: 25, fps: 15 },
-            pink_burst:     { asset: "./assets/vfx/pink_burst.png",     cols: 5, rows: 3, total: 15, fps: 15 },
-            distorted_heart:{ asset: "./assets/vfx/distorted_heart.png", cols: 5, rows: 4, total: 20, fps: 15 },
+            hearts_rising: {asset: "./assets/vfx/hearts_rising.png", cols: 5, rows: 4, total: 20, fps: 15},
+            heart_crumble: {asset: "./assets/vfx/heart_crumble.png", cols: 5, rows: 3, total: 15, fps: 15},
+            analysis_error: {asset: "./assets/vfx/analysis_error.png", cols: 5, rows: 3, total: 15, fps: 15},
+            hearts_sparkle: {asset: "./assets/vfx/hearts_sparkle.png", cols: 5, rows: 2, total: 10, fps: 15},
+            touch_effect: {asset: "./assets/vfx/touch_effect.png", cols: 5, rows: 3, total: 15, fps: 15},
+            heart_pulse: {asset: "./assets/vfx/heart_pulse.png", cols: 5, rows: 4, total: 20, fps: 15},
+            heart_form: {asset: "./assets/vfx/heart_form.png", cols: 5, rows: 5, total: 25, fps: 15},
+            pink_burst: {asset: "./assets/vfx/pink_burst.png", cols: 5, rows: 3, total: 15, fps: 15},
+            distorted_heart: {asset: "./assets/vfx/distorted_heart.png", cols: 5, rows: 4, total: 20, fps: 15},
         };
         this.activeVFX = [];
 
@@ -92,6 +137,13 @@ class DialogueScene {
         document.addEventListener("keydown", this.keyHandler);
 
         this.loadNode(startNodeId || data.start);
+    }
+
+    // tutorial blinks at random intervals. mostly 2-5 seconds between blinks, occasional double blink
+    rollNextBlinkDelay() {
+        // 15% chance of a quick re-blink, otherwise normal pause
+        if (Math.random() < 0.15) return 0.25 + Math.random() * 0.4;
+        return 2.0 + Math.random() * 3.5;
     }
 
     onKey(e) {
@@ -116,7 +168,8 @@ class DialogueScene {
         if (!match) return nodeId;
         const who = match[1];
         GameState.visitCounts[who]++;
-        const interactionNum = Math.min(GameState.visitCounts[who], 3);
+        let interactionNum = GameState.visitCounts[who];
+        if (interactionNum > 3) interactionNum = 3;
         return `${who}_day${interactionNum}_intro`;
     }
 
@@ -143,23 +196,46 @@ class DialogueScene {
         }
 
         if (nodeId === "dayEnd") {
-            this._handleDayEnd();
+            this.handleDayEnd();
             return;
         }
 
         const node = this.data.nodes[nodeId];
         if (!node) {
-            console.warn("Missing dialogue node:", nodeId);
+            console.warn("missing dialogue node:", nodeId);
             this.phase = "end";
+            return;
+        }
+
+        // figure out the new portrait, portrait controls which sprite is on screen (tutorial,duc, muhammed, mikhail)
+        // so we key entrance/exit off of THAT not off speaker name tutorial's first node uses speaker "???" but
+        // portrait "tutorial" so the second node where the label flips to "TUTORIAL" doesnt cause an unnecessary
+        // slide cycle.
+        let newPortrait = "";
+        if (node.type !== "system" && node.portrait) newPortrait = node.portrait;
+
+        const portraitChanged = newPortrait !== this.currentPortrait;
+        const haveSomeoneOnScreen = this.currentPortrait !== "" && this.charPhase !== CHAR_PHASE_OFF;
+        if (portraitChanged && haveSomeoneOnScreen && newPortrait !== "") {
+            this.pendingNodeId = nodeId;
+            this.charPhase = CHAR_PHASE_EXITING;
+            this.charLerpT = 0;
+            return;
+        }
+        // transitioning into a system screen also clears whoever is on screen
+        if (node.type === "system" && haveSomeoneOnScreen) {
+            this.pendingNodeId = nodeId;
+            this.charPhase = CHAR_PHASE_EXITING;
+            this.charLerpT = 0;
             return;
         }
 
         this.currentNodeId = nodeId;
         this.currentNode = node;
 
-        // reset per-node bug state
-        this.muhammedLoopCount = 0;
+        // muhammed loop counter resets per node load
         this.muhammedLoopPressed = 0;
+
         if (node.type === "system") {
             this.phase = "system";
             this.systemLines = node.lines.map(l => this.sub(l));
@@ -168,65 +244,93 @@ class DialogueScene {
             this.pendingNextForSystem = node.next;
             // System screens = "A problem has been detected"-style BSOD. Start typing SFX.
             MUSIC.startTyping();
-        } else {
-            this.phase = "typing";
-            // check if NPC remembers something you said
-            var txt = node.text;
-            if (node.memoryText) {
-                for (var mem in node.memoryText) {
-                    if (GameState.hasMemory(mem)) { txt = node.memoryText[mem]; break; }
+            return;
+        }
+
+        // dialogue or choice node
+        this.phase = "typing";
+
+        // npc remembers something player said
+        let txt = node.text;
+        if (node.memoryText) {
+            for (const mem in node.memoryText) {
+                if (GameState.hasMemory(mem)) {
+                    txt = node.memoryText[mem];
+                    break;
                 }
             }
-            this.fullText = this.sub(txt);
-            this.displayText = "";
-            this.charIndex = 0;
-            this.typingTimer = 0;
-            this.currentSpeaker = node.speaker || "";
-            this.currentPortrait = node.portrait || "";
-            this.currentChoices = node.choices || null;
-            this.nextNodeId = node.next || null;
-
-            if (this.currentSpeaker === "TUTORIAL" && !GameState.metCharacters.tutorial) {
-                GameState.metCharacters.tutorial = true;
-            }
-
-            const folderMap = {"ĐỨC": "guy1", "MUHAMMED": "guy3", "MIKHAIL": "guy2"};
-            const folder = folderMap[this.currentSpeaker];
-            if (!folder) {
-                this.currentGuySprite = null;
-            } else {
-                const guyExpr = node.expression || "Neutral";
-                this.currentGuySprite = ASSET_MANAGER.getAsset(`./assets/characters/${folder}/${guyExpr}.png`)
-                    || ASSET_MANAGER.getAsset(`./assets/characters/${folder}/Neutral.png`);
-
-                const girlExpr = node.playerExpr || "Natu";
-                this.currentGirlSprite = ASSET_MANAGER.getAsset(`./assets/characters/girl1/${girlExpr}.png`)
-                    || ASSET_MANAGER.getAsset("./assets/characters/girl1/Natu.png");
-            }
-
-            if (node.bug === "duc_reboot") {
-                this.ducShakeTimer = this.ducShakeDuration;
-            }
         }
+        this.fullText = this.sub(txt);
+        this.displayText = "";
+        this.charIndex = 0;
+        this.typingTimer = 0;
+        this.currentSpeaker = node.speaker || "";
+        this.currentPortrait = node.portrait || "";
+        this.currentChoices = node.choices || null;
+        this.nextNodeId = node.next || null;
+
+        // first time tutorial speaks, mark him as met so he shows up in the I-menu
+        if (this.currentSpeaker === "TUTORIAL" && !GameState.metCharacters.tutorial) {
+            GameState.metCharacters.tutorial = true;
+        }
+
+        // load the bachelor sprite for this expression. tutorial doesnt get a body sprite (yet), hes only ever shown
+        // in the speaker label and portrait box
+        const folder = SPEAKER_FOLDER[this.currentSpeaker];
+        if (folder) {
+            let guyExpr = node.expression;
+            if (!guyExpr) guyExpr = "Neutral";
+            this.currentGuySprite = ASSET_MANAGER.getAsset(`./assets/characters/${folder}/${guyExpr}.png`);
+            if (!this.currentGuySprite) {
+                this.currentGuySprite = ASSET_MANAGER.getAsset(`./assets/characters/${folder}/Neutral.png`);
+            }
+        } else {
+            this.currentGuySprite = null;
+        }
+
+        // player sprite expression
+        let girlExpr = node.playerExpr;
+        if (!girlExpr) girlExpr = "Natu";
+        this.currentGirlSprite = ASSET_MANAGER.getAsset(`./assets/characters/girl1/${girlExpr}.png`);
+        if (!this.currentGirlSprite) {
+            this.currentGirlSprite = ASSET_MANAGER.getAsset("./assets/characters/girl1/Natu.png");
+        }
+
+        if (node.bug === "duc_reboot") {
+            this.ducShakeTimer = this.ducShakeDuration;
+        }
+
+        // start the entrance animation. if the previous speaker was the same person, theyre already on screen so we
+        // skip the slide and go straight to speaking
+        if (this.charPhase === CHAR_PHASE_OFF) {
+            this.charPhase = CHAR_PHASE_ENTERING;
+            this.charLerpT = 0;
+            this.charCurrentX = CHAR_OFFSCREEN_X;
+            // typing is held back until the slide finishes. flip phase to "waiting" so update knows
+            this.phase = "char_entering";
+        }
+        // if charPhase is already SPEAKING we keep going. same character continuing their turn
     }
 
     handleDebrief() {
-        var who = GameState.visitedToday;
-        var num = who ? GameState.visitCounts[who] : 1;
+        const who = GameState.visitedToday;
+        let num = 1;
+        if (who) num = GameState.visitCounts[who];
         if (num > 3) num = 3;
-        var reactNode = who ? "tutorialReact" + who + num : "dayEnd";
+        let reactNode = "dayEnd";
+        if (who) reactNode = "tutorialReact" + who + num;
         if (this.data.nodes[reactNode]) {
             this.loadNode(reactNode);
         } else {
-            this.loadNode("dayEnd"); // fallback if node doesnt exist yet
+            this.loadNode("dayEnd");
         }
     }
 
-    _handleDayEnd() {
+    handleDayEnd() {
         MUSIC.stopTyping();
         const ending = GameState.checkEnding();
         if (ending) {
-            this._fadeTo(() => {
+            this.fadeTo(() => {
                 this.game.addEntity(new EndingScene(this.game, ending));
                 document.removeEventListener("keydown", this.keyHandler);
                 this.removeFromWorld = true;
@@ -234,38 +338,52 @@ class DialogueScene {
             return;
         }
         GameState.advanceDay();
-        this._fadeTo(() => {
+        this.fadeTo(() => {
             this.game.addEntity(new BootDayScene(this.game, "tutorial_morning"));
             document.removeEventListener("keydown", this.keyHandler);
             this.removeFromWorld = true;
         });
     }
 
-    _fadeTo(callback) {
+    fadeTo(callback) {
         this.fadingOut = true;
         this.fadeOutTarget = callback;
     }
 
     playVFX(name, x, y, scale) {
-        var def = this.VFX_DEFS[name];
+        const def = this.VFX_DEFS[name];
         if (!def) return;
-        this.activeVFX.push({
-            def, x: x || 960, y: y || 400, scale: scale || 1,
-            frame: 0, timer: 0, done: false
-        });
+        let fxX = x;
+        let fxY = y;
+        let fxS = scale;
+        if (fxX === undefined) fxX = 960;
+        if (fxY === undefined) fxY = 400;
+        if (fxS === undefined) fxS = 1;
+        this.activeVFX.push({def, x: fxX, y: fxY, scale: fxS, frame: 0, timer: 0, done: false});
     }
 
-    _gearHit(p) {
+    gearHit(p) {
         const g = this.gearBtn;
-        return p && p.x >= g.x && p.x <= g.x + g.w && p.y >= g.y && p.y <= g.y + g.h;
+        if (!p) return false;
+        return p.x >= g.x && p.x <= g.x + g.w && p.y >= g.y && p.y <= g.y + g.h;
+    }
+
+    // ease-out cubic. starts fast, settles slow into the target. feels nicer than linear lerp for character entrances
+    // cause it gives the sprite weight when it stops
+    easeOut(t) {
+        return 1 - Math.pow(1 - t, 3);
     }
 
     update() {
-        // detect overlay close: if we're paused and no overlay exists, unpause
+        // overlay detection. if a settings or character sheet overlay was added, freeze our update
         if (this.paused) {
-            const hasOverlay = this.game.entities.some(
-                e => (e instanceof CharacterSheetScene || e instanceof SettingsScene) && !e.removeFromWorld
-            );
+            let hasOverlay = false;
+            for (const e of this.game.entities) {
+                if ((e instanceof CharacterSheetScene || e instanceof SettingsScene) && !e.removeFromWorld) {
+                    hasOverlay = true;
+                    break;
+                }
+            }
             if (!hasOverlay) this.paused = false;
             else return;
         }
@@ -275,8 +393,8 @@ class DialogueScene {
         const mouse = this.game.mouse;
 
         // tick vfx animations
-        for (var v = this.activeVFX.length - 1; v >= 0; v--) {
-            var fx = this.activeVFX[v];
+        for (let v = this.activeVFX.length - 1; v >= 0; v--) {
+            const fx = this.activeVFX[v];
             fx.timer += dt;
             if (fx.timer >= 1 / fx.def.fps) {
                 fx.timer -= 1 / fx.def.fps;
@@ -286,6 +404,13 @@ class DialogueScene {
                 }
             }
         }
+
+        // tutorial blink animation. only ticks when tutorial is the current speaker so we dont burn cycles when hes
+        // not on screen. this drives sprite frame index 0/1/2 of his sheet
+        if (this.currentSpeaker === "TUTORIAL") {
+            this.updateTutorialBlink(dt);
+        }
+
         if (this.fadingIn) {
             this.fadeAlpha = Math.max(0, this.fadeAlpha - dt * 1.6);
             if (this.fadeAlpha <= 0) this.fadingIn = false;
@@ -307,15 +432,17 @@ class DialogueScene {
         if (this.playerOpacity < 1) this.playerOpacity = Math.min(1, this.playerOpacity + dt * 0.67);
         this.breathTimer += dt * 2.5;
 
-        // Gear button hover (only shown in normal dialogue, not system screens)
+        // tick character entrance state machine. this happens regardless of dialogue phase so the sprite slides
+        // smoothly even while system screens are loading underneath
+        this.tickCharacterTransition(dt);
+
+        // gear button hover and click. always available except on system screens
         this.gearHovered = false;
         if (mouse && this.phase !== "system" && this.phase !== "system_pause") {
-            this.gearHovered = this._gearHit(mouse);
+            this.gearHovered = this.gearHit(mouse);
         }
 
-        // Click gear -> open Settings overlay
-        if (click && this.phase !== "system" && this.phase !== "system_pause" && this._gearHit(click)) {
-
+        if (click && this.phase !== "system" && this.phase !== "system_pause" && this.gearHit(click)) {
             this.gearPressed = true;
             setTimeout(() => {
                 this.gearPressed = false;
@@ -326,6 +453,7 @@ class DialogueScene {
             return;
         }
 
+        // system screen progression
         if (this.phase === "system") {
             this.systemLineTimer += dt;
             if (this.systemLineTimer >= 0.45) {
@@ -334,7 +462,7 @@ class DialogueScene {
                 if (this.systemLineIndex >= this.systemLines.length) {
                     this.phase = "system_pause";
                     this.pauseTimer = 0;
-                    MUSIC.stopTyping(); // typewriter finished
+                    MUSIC.stopTyping();
                 }
             }
             if (click) {
@@ -351,10 +479,16 @@ class DialogueScene {
         if (this.phase === "system_pause") {
             this.pauseTimer += dt;
             if (this.pauseTimer >= 1.0 || click) {
-                if (click)
-                    this.game.click = null;
+                if (click) this.game.click = null;
                 this.loadNode(this.pendingNextForSystem);
             }
+            return;
+        }
+
+        // while character is sliding in or out, dialogue text doesnt type. swallow clicks so you cant accidentally skip
+        // past them. clicks on the gear were handled above
+        if (this.phase === "char_entering" || this.charPhase === CHAR_PHASE_EXITING) {
+            if (click) this.game.click = null;
             return;
         }
 
@@ -373,13 +507,13 @@ class DialogueScene {
             }
         }
 
-        // Hover detection
+        // hover detection
         this.hoveredChoice = -1;
         this.nextBtnHovered = false;
         if (mouse) {
             if (this.phase === "choice" && this.currentChoices) {
                 for (let i = 0; i < this.currentChoices.length; i++) {
-                    const r = this._choiceRect(i);
+                    const r = this.choiceRect(i);
                     if (mouse.x >= r.x && mouse.x <= r.x + r.w &&
                         mouse.y >= r.y && mouse.y <= r.y + r.h) {
                         this.hoveredChoice = i;
@@ -399,6 +533,7 @@ class DialogueScene {
             const cy = click.y;
             this.game.click = null;
 
+            // skip the typewriter on any click. clicking once finishes the line, clicking again advances
             if (this.phase === "typing" || justFinishedTyping) {
 
                 this.charIndex = this.fullText.length;
@@ -408,6 +543,8 @@ class DialogueScene {
             }
 
             if (this.phase === "idle") {
+                // muhammed loop bug. needs 3 separate clicks to escape, each one paints a new
+                // dialogue box stacked underneath in a different font
                 if (this.currentNode && this.currentNode.bug === "muhammed_loop") {
                     this.muhammedLoopPressed++;
                     if (this.muhammedLoopPressed < 3) {
@@ -420,31 +557,27 @@ class DialogueScene {
                     }
                 }
 
-                const n = this.NEXT, d = this.DLG;
-                const onNext = cx >= n.x && cx <= n.x + n.w && cy >= n.y && cy <= n.y + n.h;
-                const onBox = cx >= d.x && cx <= d.x + d.w && cy >= d.y && cy <= d.y + d.h;
-                if (onNext || onBox) {
-
-                    if (onNext) {
-                        this.nextBtnPressed = true;
-                        setTimeout(() => {
-                            this.nextBtnPressed = false;
-                        }, 120);
-                    }
-                    if (this.currentChoices) {
-                        this.phase = "choice";
-                    } else if (this.nextNodeId) {
-                        this.loadNode(this.nextNodeId);
-                    } else {
-                        this.phase = "end";
-                    }
+                // click anywhere to advance. used to require clicking on the box or the next arrow
+                // but everyone tried clicking the screen first so we just made the screen the button
+                if (this.nextBtnHovered) {
+                    this.nextBtnPressed = true;
+                    setTimeout(() => {
+                        this.nextBtnPressed = false;
+                    }, 120);
+                }
+                if (this.currentChoices) {
+                    this.phase = "choice";
+                } else if (this.nextNodeId) {
+                    this.loadNode(this.nextNodeId);
+                } else {
+                    this.phase = "end";
                 }
                 return;
             }
 
             if (this.phase === "choice" && this.currentChoices) {
                 for (let i = 0; i < this.currentChoices.length; i++) {
-                    const r = this._choiceRect(i);
+                    const r = this.choiceRect(i);
                     if (click.x >= r.x && click.x <= r.x + r.w &&
                         click.y >= r.y && click.y <= r.y + r.h) {
 
@@ -453,8 +586,9 @@ class DialogueScene {
 
                         const gameFlag = choice.oncePerGame;
                         const dayFlag = choice.oncePerDay;
-                        const flagBlocks = (gameFlag && GameState.hasFlag(gameFlag, "game")) ||
-                            (dayFlag && GameState.hasFlag(dayFlag, "day"));
+                        let flagBlocks = false;
+                        if (gameFlag && GameState.hasFlag(gameFlag, "game")) flagBlocks = true;
+                        if (dayFlag && GameState.hasFlag(dayFlag, "day")) flagBlocks = true;
 
                         if (choice.points && !flagBlocks) {
                             for (const k in choice.points) {
@@ -472,22 +606,23 @@ class DialogueScene {
                         if (choice.memory) GameState.addMemory(choice.memory);
                         if (choice.chaos) GameState.addChaos(choice.chaos, choice.text);
 
+                        // reaction VFX based on the size and sign of the point change
                         if (choice.points && !flagBlocks) {
-                            var total = 0;
-                            for (var k2 in choice.points) total += choice.points[k2];
+                            let total = 0;
+                            for (const k2 in choice.points) total += choice.points[k2];
 
-                            var offsetX = (Math.random() - 0.5) * 200;
-                            var offsetY = (Math.random() - 0.5) * 120;
+                            const offsetX = (Math.random() - 0.5) * 200;
+                            const offsetY = (Math.random() - 0.5) * 120;
 
                             if (choice.chaos) {
                                 this.playVFX("analysis_error", 960 + offsetX, 380 + offsetY, 3);
+                            } else if (total >= 8) {
+                                this.playVFX("heart_pulse", 960 + offsetX, 380 + offsetY, 3);
                             } else if (total > 0) {
-                                var vfxName = total >= 8 ? "heart_pulse" : "heart_form";
-                                this.playVFX(vfxName, 960 + offsetX, 380 + offsetY, 3);
+                                this.playVFX("heart_form", 960 + offsetX, 380 + offsetY, 3);
                             } else if (total < 0) {
                                 this.playVFX("distorted_heart", 960 + offsetX, 380 + offsetY, 3);
                             }
-
                         }
 
                         setTimeout(() => {
@@ -496,7 +631,7 @@ class DialogueScene {
 
                         const ending = GameState.checkEnding();
                         if (ending) {
-                            this._fadeTo(() => {
+                            this.fadeTo(() => {
                                 this.game.addEntity(new EndingScene(this.game, ending));
                                 document.removeEventListener("keydown", this.keyHandler);
                                 this.removeFromWorld = true;
@@ -512,8 +647,83 @@ class DialogueScene {
         }
     }
 
-    _choiceRect(i) {
-        const n = this.currentChoices ? this.currentChoices.length : 4;
+    // step the tutorial blink state machine. this runs his 3-frame sheet through open -> half -> closed -> half -> open
+    // with random pauses between cycles. variable timing keeps it lifelike
+    updateTutorialBlink(dt) {
+        this.tutorialBlinkTimer += dt;
+        if (this.tutorialBlinkPhase === "open") {
+            if (this.tutorialBlinkTimer >= this.tutorialNextBlinkIn) {
+                this.tutorialBlinkPhase = "closing";
+                this.tutorialBlinkTimer = 0;
+                this.tutorialBlinkFrame = 1;
+            }
+        } else if (this.tutorialBlinkPhase === "closing") {
+            // half frame visible for ~60ms before snapping to fully closed
+            if (this.tutorialBlinkTimer >= 0.06) {
+                this.tutorialBlinkPhase = "closed";
+                this.tutorialBlinkTimer = 0;
+                this.tutorialBlinkFrame = 2;
+            }
+        } else if (this.tutorialBlinkPhase === "closed") {
+            // hold the closed eye for a hair longer than the half-frame. feels more natural
+            if (this.tutorialBlinkTimer >= 0.09) {
+                this.tutorialBlinkPhase = "opening";
+                this.tutorialBlinkTimer = 0;
+                this.tutorialBlinkFrame = 1;
+            }
+        } else if (this.tutorialBlinkPhase === "opening") {
+            if (this.tutorialBlinkTimer >= 0.06) {
+                this.tutorialBlinkPhase = "open";
+                this.tutorialBlinkTimer = 0;
+                this.tutorialBlinkFrame = 0;
+                this.tutorialNextBlinkIn = this.rollNextBlinkDelay();
+            }
+        }
+    }
+
+    // sequence the bachelor in and out across the right half of the screen. ENTERING lerps from CHAR_OFFSCREEN_X down
+    // to 0 with ease-out. EXITING lerps the other way and when it hits the wall it triggers loading whatever node was
+    // queued up while we were exiting.
+    tickCharacterTransition(dt) {
+        if (this.charPhase === CHAR_PHASE_OFF) return;
+
+        if (this.charPhase === CHAR_PHASE_ENTERING) {
+            this.charLerpT += dt / this.charLerpDuration;
+            if (this.charLerpT >= 1) {
+                this.charLerpT = 1;
+                this.charCurrentX = 0;
+                this.charPhase = CHAR_PHASE_SPEAKING;
+                // unblock the dialogue. flip from "char_entering" hold-state into the real typing phase
+                if (this.phase === "char_entering") this.phase = "typing";
+            } else {
+                const eased = this.easeOut(this.charLerpT);
+                this.charCurrentX = CHAR_OFFSCREEN_X * (1 - eased);
+            }
+        } else if (this.charPhase === CHAR_PHASE_EXITING) {
+            this.charLerpT += dt / this.charLerpDuration;
+            if (this.charLerpT >= 1) {
+                this.charLerpT = 1;
+                this.charCurrentX = CHAR_OFFSCREEN_X;
+                this.charPhase = CHAR_PHASE_OFF;
+                // exit completed. clear sprite and portrait, then fire whatever node was waiting
+                this.currentSpeaker = "";
+                this.currentPortrait = "";
+                this.currentGuySprite = null;
+                if (this.pendingNodeId) {
+                    const next = this.pendingNodeId;
+                    this.pendingNodeId = null;
+                    this.loadNode(next);
+                }
+            } else {
+                const eased = this.easeOut(this.charLerpT);
+                this.charCurrentX = CHAR_OFFSCREEN_X * eased;
+            }
+        }
+    }
+
+    choiceRect(i) {
+        let n = 4;
+        if (this.currentChoices) n = this.currentChoices.length;
         const x = 1920 / 2 - this.REPLY_W / 2;
         const totalH = n * this.REPLY_H + (n - 1) * this.REPLY_GAP;
         const startY = 1080 / 2 - totalH / 2 + 70;
@@ -528,27 +738,25 @@ class DialogueScene {
         const bg = AM.getAsset("./assets/DatingGameUI/Background.jpg");
         if (bg) ctx.drawImage(bg, 0, 0, W, H);
 
-
         if (this.phase === "system" || this.phase === "system_pause") {
             this.drawSystem(ctx, W, H);
         } else if (this.phase === "end") {
-            // nothing; EndingScene should take over
+            // nothing to draw. the next scene takes over
         } else {
             this.drawCharacterAndDialogue(ctx, AM);
         }
 
-        for (var v = 0; v < this.activeVFX.length; v++) {
-            var fx = this.activeVFX[v];
-            var img = ASSET_MANAGER.getAsset(fx.def.asset);
+        // vfx layer above sprites
+        for (const fx of this.activeVFX) {
+            const img = ASSET_MANAGER.getAsset(fx.def.asset);
             if (!img) continue;
-            var fw = img.width / fx.def.cols;
-            var fh = img.height / fx.def.rows;
-            var sx = (fx.frame % fx.def.cols) * fw;
-            var sy = Math.floor(fx.frame / fx.def.cols) * fh;
-            var s = fx.scale || 1;
-            var dw = fw * s;
-            var dh = fh * s;
-            ctx.drawImage(img, sx, sy, fw, fh, fx.x - dw/2, fx.y - dh/2, dw, dh);
+            const fw = img.width / fx.def.cols;
+            const fh = img.height / fx.def.rows;
+            const sx = (fx.frame % fx.def.cols) * fw;
+            const sy = Math.floor(fx.frame / fx.def.cols) * fh;
+            const dw = fw * fx.scale;
+            const dh = fh * fx.scale;
+            ctx.drawImage(img, sx, sy, fw, fh, fx.x - dw / 2, fx.y - dh / 2, dw, dh);
         }
 
         if (this.phase !== "system" && this.phase !== "system_pause") {
@@ -578,14 +786,19 @@ class DialogueScene {
         const x = 90;
         const startY = 180;
 
-        for (let i = 0; i <= Math.min(this.systemLineIndex, this.systemLines.length - 1); i++) {
+        let lastDrawnIndex = this.systemLineIndex;
+        if (lastDrawnIndex > this.systemLines.length - 1) lastDrawnIndex = this.systemLines.length - 1;
+
+        for (let i = 0; i <= lastDrawnIndex; i++) {
             const line = this.systemLines[i];
             if (line === "") continue;
-            ctx.font = (line.startsWith("***") || line.startsWith("END OF DAY") ||
-                line.startsWith("UNEXPECTED") || line.startsWith("USER_") ||
-                line.startsWith("DAY_"))
-                ? "bold 36px 'Lucida Console', 'Consolas', monospace"
-                : "32px 'Lucida Console', 'Consolas', monospace";
+            const isHeader = line.startsWith("***") || line.startsWith("END OF DAY") ||
+                line.startsWith("UNEXPECTED") || line.startsWith("USER_") || line.startsWith("DAY_");
+            if (isHeader) {
+                ctx.font = "bold 36px 'Lucida Console', 'Consolas', monospace";
+            } else {
+                ctx.font = "32px 'Lucida Console', 'Consolas', monospace";
+            }
             ctx.fillText(line, x, startY + i * lh);
         }
     }
@@ -601,10 +814,18 @@ class DialogueScene {
         ctx.save();
         ctx.translate(shakeX, shakeY);
 
-        if (this.phase === "typing" || this.phase === "idle" || this.phase === "choice") {
-            const isChoice = this.phase === "choice";
+        const isChoice = this.phase === "choice";
 
-            this.drawCharSprite(ctx, isChoice);
+        // sprites first, then dialogue UI on top
+        this.drawCharSprite(ctx, isChoice);
+
+        if (isChoice) {
+            // choice phase: hide the dialogue box, swap container/label to show the player as the one whos about to
+            // speak, then render reply buttons over the top
+            this.drawPlayerPortraitContainer(ctx, AM);
+            this.drawPlayerSpeakerLabel(ctx);
+            if (this.currentChoices) this.drawReplyButtons(ctx, AM);
+        } else {
             this.drawDialogueBox(ctx, AM);
             this.drawCharacterContainer(ctx, AM);
             this.drawSpeakerLabel(ctx);
@@ -624,18 +845,28 @@ class DialogueScene {
 
     drawCharSprite(ctx, isChoice) {
         const guyImg = this.currentGuySprite;
-        const girlImg = this.currentGirlSprite ||
-            ASSET_MANAGER.getAsset("./assets/characters/girl1/Natu.png");
+        let girlImg = this.currentGirlSprite;
+        if (!girlImg) girlImg = ASSET_MANAGER.getAsset("./assets/characters/girl1/Natu.png");
 
         const W = 1920, H = 1080;
         const breathY = Math.sin(this.breathTimer) * 4;
         const breathY2 = Math.sin(this.breathTimer * 0.85 + 1) * 3;
-        const guyTalking = this.currentSpeaker && !isChoice;
+
+        // during choice phase bachelor isnt talking. push them off-center and let the player take focus
+        let guyTalking = false;
+        if (this.currentSpeaker && !isChoice) guyTalking = true;
 
         const girlScale = 0.85;
-        const girlX = isChoice ? -W * 0.18 : -W * 0.28;
+        let girlX = -W * 0.28;
+        if (isChoice) girlX = -W * 0.18;
         const girlY = H * (1 - girlScale);
-        const guyX = guyTalking ? W * 0.18 : W * 0.28;
+
+        let guyBaseX = W * 0.28;
+        if (guyTalking) guyBaseX = W * 0.18;
+        // add the slide in offset on top. charCurrentX is 0 when arrived, positive when off-screen right
+        const guyX = guyBaseX + this.charCurrentX;
+
+        const guyScale = 1.45;
 
         const drawGirl = () => {
             if (!girlImg) return;
@@ -644,7 +875,6 @@ class DialogueScene {
             ctx.drawImage(girlImg, girlX, girlY + breathY, W * girlScale, H * girlScale);
             ctx.restore();
         };
-        const guyScale = 1.45;
         const drawGuy = () => {
             if (!guyImg) return;
             ctx.save();
@@ -656,6 +886,7 @@ class DialogueScene {
             ctx.restore();
         };
 
+        // z-order: whoever is talking gets drawn on top
         if (guyTalking) {
             drawGirl();
             drawGuy();
@@ -668,21 +899,57 @@ class DialogueScene {
     drawCharacterContainer(ctx, AM) {
         const c = this.CHAR_BOX;
         const containerImg = AM.getAsset("./assets/DatingGameUI/CharacterScreen/CharacterContainer.png");
-        if (containerImg) {
-            ctx.drawImage(containerImg, c.x, c.y, c.w, c.h);
+        if (containerImg) ctx.drawImage(containerImg, c.x, c.y, c.w, c.h);
+
+        // tutorial face uses the blink sprite sheet, everyone else uses a single Face.png
+        if (this.currentSpeaker === "TUTORIAL") {
+            const sheet = ASSET_MANAGER.getAsset("./assets/characters/tutorial/face.png");
+            if (sheet) {
+                const ip = 18;
+                const frameW = sheet.width / 3;
+                const frameH = sheet.height;
+                const sx = this.tutorialBlinkFrame * frameW;
+                ctx.drawImage(
+                    sheet,
+                    sx, 0, frameW, frameH,
+                    c.x + ip + FACE_X_OFFSET, c.y + ip + FACE_Y_OFFSET,
+                    c.w - ip * 2, c.h - ip * 2
+                );
+            }
+            return;
         }
 
-        const faceMap = {
-            "ĐỨC": "./assets/characters/guy1/Face.png",
-            "MUHAMMED": "./assets/characters/guy3/Face.png",
-            "MIKHAIL": "./assets/characters/guy2/Face.png",
-        };
-        const facePath = faceMap[this.currentSpeaker];
-        const faceImg = facePath ? ASSET_MANAGER.getAsset(facePath) : null;
-
+        const facePath = SPEAKER_FACE[this.currentSpeaker];
+        if (!facePath) return;
+        const faceImg = ASSET_MANAGER.getAsset(facePath);
         if (faceImg) {
-            var ip = 18;
-            ctx.drawImage(faceImg, c.x + ip, c.y + ip - 12, c.w - ip * 2, c.h - ip * 2);
+            const ip = 18;
+            ctx.drawImage(
+                faceImg,
+                c.x + ip + FACE_X_OFFSET,
+                c.y + ip + FACE_Y_OFFSET,
+                c.w - ip * 2,
+                c.h - ip * 2
+            );
+        }
+    }
+
+    // choice phase variant: paint the players face into the same container box. uses the girl1 Face.png since thats the
+    // one designed for portrait crops
+    drawPlayerPortraitContainer(ctx, AM) {
+        const c = this.CHAR_BOX;
+        const containerImg = AM.getAsset("./assets/DatingGameUI/CharacterScreen/CharacterContainer.png");
+        if (containerImg) ctx.drawImage(containerImg, c.x, c.y, c.w, c.h);
+        const faceImg = AM.getAsset("./assets/characters/girl1/Face.png");
+        if (faceImg) {
+            const ip = 18;
+            ctx.drawImage(
+                faceImg,
+                c.x + ip + FACE_X_OFFSET + 10,
+                c.y + ip + PLAYER_FACE_Y_OFFSET + 40,
+                c.w - ip * 4,
+                c.h - ip * 4
+            );
         }
     }
 
@@ -690,21 +957,21 @@ class DialogueScene {
         if (!this.currentSpeaker) return;
         const s = this.SPEAKER;
 
-        const speakerColor = {
+        let speakerColor = "#e8006f";
+        const colorMap = {
             "ĐỨC": "#3a5a9a",
             "MUHAMMED": "#d87a1f",
             "MIKHAIL": "#a02030",
             "TUTORIAL": "#2a9090",
             "SYSTEM": "#ff2200",
             "???": "#666666",
-        }[this.currentSpeaker] || "#e8006f";
+        };
+        if (colorMap[this.currentSpeaker]) speakerColor = colorMap[this.currentSpeaker];
 
-        var labelBg = ASSET_MANAGER.getAsset("./assets/DatingGameUI/CharacterScreen/SmallTextContainer.png");
-        if (labelBg) {
-            ctx.drawImage(labelBg, s.x, s.y, s.w, s.h);
-        }
+        const labelBg = ASSET_MANAGER.getAsset("./assets/DatingGameUI/CharacterScreen/SmallTextContainer.png");
+        if (labelBg) ctx.drawImage(labelBg, s.x, s.y, s.w, s.h);
 
-
+        // tutorial occasionally glitches a character of his name. very low chance per frame
         let nameDisplay = this.currentSpeaker;
         if (this.currentSpeaker === "TUTORIAL" && Math.random() < 0.018) {
             const glyphs = "!@#$%^&*<>?/|{}~`";
@@ -721,56 +988,108 @@ class DialogueScene {
         ctx.fillText(nameDisplay, s.x + s.w / 2, s.y + s.h / 2);
     }
 
+    // choice phase label. shows the player name in pink so it visually contrasts with the bachelors color. lets the
+    // player know that THEY are about to speak
+    drawPlayerSpeakerLabel(ctx) {
+        const s = this.SPEAKER;
+        const labelBg = ASSET_MANAGER.getAsset("./assets/DatingGameUI/CharacterScreen/SmallTextContainer.png");
+        if (labelBg) ctx.drawImage(labelBg, s.x, s.y, s.w, s.h);
+
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = "bold 40px 'The Bold Font', Georgia, serif";
+        ctx.fillStyle = "#e8006f";
+        ctx.fillText(GameState.playerName, s.x + s.w / 2, s.y + s.h / 2);
+    }
+
     drawDialogueBox(ctx, AM) {
         const d = this.DLG;
         const dlgImg = AM.getAsset("./assets/DatingGameUI/Dialogue/DialogueContainer.png");
+        if (dlgImg) ctx.drawImage(dlgImg, d.x, d.y, d.w, d.h);
 
-        if (dlgImg) {
-            ctx.drawImage(dlgImg, d.x, d.y, d.w, d.h);
-        }
-
-        let renderText = this.displayText;
+        const renderText = this.displayText;
 
         ctx.textAlign = "left";
         ctx.textBaseline = "top";
         ctx.fillStyle = "#1a1a4e";
 
+        // TODO: Fix Dialogue box still not working properly
+        // muhammed loop bug. each click stacks ANOTHER dialogue box below the first one, each in a different font. keeps the text from being squished into one tiny strip
         if (this.currentNode && this.currentNode.bug === "muhammed_loop" && this.phase === "idle") {
-            const fonts = [
-                "bold 22px 'The Bold Font', Georgia, serif",
-                "italic 22px 'Roboto', sans-serif",
-                "bold 22px 'Lucida Console', monospace",
-            ];
-            let y = d.y + 20;
-            for (let i = 0; i < 3; i++) {
-                ctx.font = fonts[i];
-                ctx.globalAlpha = i < this.muhammedLoopPressed ? 0.4 : 1;
-                this.wrapText(ctx, renderText, d.x + 280, y, d.w - 380, 28);
-                y += 68;
-            }
-            ctx.globalAlpha = 1;
-
-            ctx.font = "italic 18px 'Roboto', sans-serif";
-            ctx.fillStyle = "rgba(100, 100, 140, 0.75)";
-            ctx.fillText(
-                `(loop ${this.muhammedLoopPressed + 1} / 3; click Next to skip)`,
-                d.x + 280,
-                d.y + d.h - 28
-            );
-        } else {
-            ctx.font = "bold 32px 'The Bold Font', Georgia, serif";
-            this.wrapText(ctx, renderText, d.x + 280, d.y + 40, d.w - 380, 44);
+            this.drawMuhammedLoopBoxes(ctx, AM, renderText);
+            return;
         }
 
-        if (this.phase === "idle" && (this.nextNodeId || this.currentChoices)) {
-            const n = this.NEXT;
-            const key = (this.nextBtnHovered || this.nextBtnPressed)
-                ? "./assets/DatingGameUI/NextBtnPressed.png"
-                : "./assets/DatingGameUI/NextBtn.png";
-            const img = AM.getAsset(key);
-            if (img) {
-                ctx.drawImage(img, n.x, n.y, n.w, n.h);
+        ctx.font = "bold 32px 'The Bold Font', Georgia, serif";
+        this.wrapText(ctx, renderText, d.x + 280, d.y + 40, d.w - 380, 44);
+
+        if (this.phase === "idle") {
+            const hasNext = this.nextNodeId || this.currentChoices;
+            if (hasNext) {
+                const n = this.NEXT;
+                let key = "./assets/DatingGameUI/NextBtn.png";
+                if (this.nextBtnHovered || this.nextBtnPressed) {
+                    key = "./assets/DatingGameUI/NextBtnPressed.png";
+                }
+                const img = AM.getAsset(key);
+                if (img) ctx.drawImage(img, n.x, n.y, n.w, n.h);
             }
+        }
+    }
+
+    // TODO: This was temporarily put in fix me
+    // muhammed loop renderer. up to 3 stacked mini-boxes, each in its own font, each fading to gray once theyve been
+    // clicked past. forms a visual stack of his self-repeating dialogue
+    drawMuhammedLoopBoxes(ctx, AM, renderText) {
+        const d = this.DLG;
+        const dlgImg = AM.getAsset("./assets/DatingGameUI/Dialogue/DialogueContainer.png");
+
+        // each repeat gets its own slim box stacked in the same dialogue area. height is split so all 3 fit even on the original DLG height
+        const repeats = 3;
+        const boxGap = 6;
+        const boxH = (d.h - boxGap * (repeats - 1)) / repeats;
+        const fonts = [
+            "bold 22px 'The Bold Font', Georgia, serif",
+            "italic 22px 'Roboto', sans-serif",
+            "bold 22px 'Lucida Console', monospace",
+        ];
+
+        for (let i = 0; i < repeats; i++) {
+            const by = d.y + i * (boxH + boxGap);
+            // draw a separate dialogue container per loop so it really feels like 3 boxes not one with three text columns
+            if (dlgImg) {
+                ctx.save();
+                if (i < this.muhammedLoopPressed) ctx.globalAlpha = 0.35;
+                ctx.drawImage(dlgImg, d.x, by, d.w, boxH);
+                ctx.restore();
+            }
+            ctx.save();
+            if (i < this.muhammedLoopPressed) ctx.globalAlpha = 0.4;
+            ctx.font = fonts[i];
+            ctx.fillStyle = "#1a1a4e";
+            // line height drops slightly for the smaller boxes
+            this.wrapText(ctx, renderText, d.x + 280, by + 18, d.w - 380, 26);
+            ctx.restore();
+        }
+
+        ctx.font = "italic 18px 'Roboto', sans-serif";
+        ctx.fillStyle = "rgba(100, 100, 140, 0.85)";
+        ctx.textAlign = "left";
+        ctx.fillText(
+            `(loop ${this.muhammedLoopPressed + 1} / 3, click anywhere to skip)`,
+            d.x + 280,
+            d.y + d.h - 26
+        );
+
+        // next arrow on the very last loop click
+        if (this.muhammedLoopPressed >= 0) {
+            const n = this.NEXT;
+            let key = "./assets/DatingGameUI/NextBtn.png";
+            if (this.nextBtnHovered || this.nextBtnPressed) {
+                key = "./assets/DatingGameUI/NextBtnPressed.png";
+            }
+            const img = AM.getAsset(key);
+            if (img) ctx.drawImage(img, n.x, n.y, n.w, n.h);
         }
     }
 
@@ -779,7 +1098,7 @@ class DialogueScene {
         const rpKey = "./assets/DatingGameUI/Dialogue/ReplyBtnPressed.png";
 
         for (let i = 0; i < this.currentChoices.length; i++) {
-            const r = this._choiceRect(i);
+            const r = this.choiceRect(i);
             const isHov = i === this.hoveredChoice;
             const isPressed = i === this.replyBtnPressedIndex;
 
@@ -789,14 +1108,12 @@ class DialogueScene {
                 ctx.shadowBlur = 28;
             }
 
+            let key = rKey;
+            if (isPressed) key = rpKey;
+            const img = AM.getAsset(key);
+            if (img) ctx.drawImage(img, r.x, r.y, r.w, r.h);
 
-            const img = AM.getAsset(isPressed ? rpKey : rKey);
-            if (img) {
-                ctx.drawImage(img, r.x, r.y, r.w, r.h);
-            }
-                if (isHov && !isPressed) {
-                    ctx.restore();
-                }
+            if (isHov && !isPressed) ctx.restore();
 
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
@@ -808,12 +1125,8 @@ class DialogueScene {
     }
 
     drawHUD(ctx) {
-        ctx.fillStyle = "rgba(255,255,255,0.9)";
-        var hudBg = ASSET_MANAGER.getAsset("./assets/DatingGameUI/CharacterScreen/SmallTextContainer.png");
-        if (hudBg) {
-            ctx.drawImage(hudBg, 1920 - 340, 28, 312, 64);
-        }
-
+        const hudBg = ASSET_MANAGER.getAsset("./assets/DatingGameUI/CharacterScreen/SmallTextContainer.png");
+        if (hudBg) ctx.drawImage(hudBg, 1920 - 340, 28, 312, 64);
 
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
@@ -824,21 +1137,20 @@ class DialogueScene {
     }
 
     drawGearButton(ctx) {
-        var g = this.gearBtn;
-        var greenBtn = ASSET_MANAGER.getAsset(this.gearHovered
-            ? "./assets/DatingGameUI/GreenBtnPressed.png"
-            : "./assets/DatingGameUI/GreenBtn.png");
-        var gearIcon = ASSET_MANAGER.getAsset("./assets/DatingGameUI/Icons/Settings.png");
+        const g = this.gearBtn;
+        let greenAsset = "./assets/DatingGameUI/GreenBtn.png";
+        if (this.gearHovered) greenAsset = "./assets/DatingGameUI/GreenBtnPressed.png";
+        const greenBtn = ASSET_MANAGER.getAsset(greenAsset);
+        const gearIcon = ASSET_MANAGER.getAsset("./assets/DatingGameUI/Icons/Settings.png");
 
-        if (greenBtn) {
-            ctx.drawImage(greenBtn, g.x, g.y, g.w, g.h);
-        }
+        if (greenBtn) ctx.drawImage(greenBtn, g.x, g.y, g.w, g.h);
         if (gearIcon) {
-            var cx = g.x + g.w / 2;
-            var cy = g.y + g.h / 2;
-            var scale = 56 / Math.max(gearIcon.width || 56, gearIcon.height || 56);
-            var w = (gearIcon.width || 56) * scale;
-            var h = (gearIcon.height || 56) * scale;
+            const cx = g.x + g.w / 2;
+            const cy = g.y + g.h / 2;
+            const baseSize = Math.max(gearIcon.width || 56, gearIcon.height || 56);
+            const scale = 56 / baseSize;
+            const w = (gearIcon.width || 56) * scale;
+            const h = (gearIcon.height || 56) * scale;
             ctx.drawImage(gearIcon, cx - w / 2, cy - h / 2, w, h);
         }
     }
