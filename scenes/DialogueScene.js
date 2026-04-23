@@ -191,8 +191,11 @@ class DialogueScene {
         }
 
         if (nodeId === "tutorial_morning" && GameState.visitedToday) {
-            this.loadNode("dayEnd");
-            return;
+            if (!GameState.visitedTodayList) GameState.visitedTodayList = [];
+            if (GameState.visitedTodayList.length >= 2) {
+                this.loadNode("dayEnd");
+                return;
+            }
         }
 
         if (nodeId === "dayEnd") {
