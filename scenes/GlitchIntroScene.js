@@ -15,6 +15,7 @@ class GlitchIntroScene {
             { text: "Someone liked your profile!", y: -60, delay: 1.6, x: 380 },
             { text: "ERROR: match_overflow", y: -60, delay: 2.4, x: 900 },
         ];
+        this.notifSoundPlayed = [false, false, false];
         this.shakeX = 0;
         this.shakeY = 0;
     }
@@ -22,6 +23,13 @@ class GlitchIntroScene {
     update() {
         var dt = this.game.clockTick;
         this.timer += dt;
+
+        for (var n = 0; n < this.notifications.length; n++) {
+            if (!this.notifSoundPlayed[n] && this.timer >= this.notifications[n].delay) {
+                this.notifSoundPlayed[n] = true;
+                MUSIC.playPopup();
+            }
+        }
 
         if (this.game.click && this.timer > 0.5) {
             this.game.click = null;
