@@ -249,6 +249,7 @@ class DialogueScene {
 
         // dialogue or choice node
         this.phase = "typing";
+        MUSIC.startDialogueTyping();
 
         // npc remembers something player said
         let txt = node.text;
@@ -503,6 +504,7 @@ class DialogueScene {
             }
             if (this.charIndex >= this.fullText.length) {
                 this.phase = "idle";
+                MUSIC.stopTyping(); ;
                 justFinishedTyping = true;
             }
         }
@@ -539,6 +541,7 @@ class DialogueScene {
                 this.charIndex = this.fullText.length;
                 this.displayText = this.fullText;
                 this.phase = "idle";
+                MUSIC.stopTyping();
                 return;
             }
 
