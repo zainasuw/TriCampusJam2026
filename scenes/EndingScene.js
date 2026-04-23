@@ -13,7 +13,7 @@ class EndingScene {
         this.showContent = false;
         this.revealTimer = 0;
         this.revealDelay = 0.6;
-
+        this.soundPlayed = false;
         this.continueHovered = false;
         this.done = false;
 
@@ -44,8 +44,17 @@ class EndingScene {
 
         if (!this.showContent) {
             this.revealTimer += dt;
-            if (this.revealTimer >= this.revealDelay) this.showContent = true;
-            return;
+            if (this.revealTimer >= this.revealDelay) {
+                this.showContent = true;
+                if (!this.soundPlayed) {
+                    this.soundPlayed = true;
+                    if (this.kind === "VICTORY" || this.kind === "TRANSCEND") {
+                        MUSIC.playWin();
+                    } else {
+                        MUSIC.playLose();
+                    }
+                }
+            }
         }
 
         const mouse = this.game.mouse;

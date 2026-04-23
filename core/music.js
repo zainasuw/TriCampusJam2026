@@ -55,6 +55,15 @@ class AudioManager {
             console.log("Game music failed to load:", e);
             this.gameMusic = null;
         }
+        try {
+            this.winSound = new Audio("./assets/audio/wingame.mp3");
+            this.winSound.preload = "auto";
+        } catch (e) { this.winSound = null; }
+        
+        try {
+            this.loseSound = new Audio("./assets/audio/gameover.mp3");
+            this.loseSound.preload = "auto";
+        } catch (e) { this.loseSound = null; }
     }
 
     _loadSfx() {
@@ -81,6 +90,10 @@ class AudioManager {
             this._fallbackTyping.preload = "auto";
             this._fallbackTyping.loop = true;
         } catch (e) { this._fallbackTyping = null; }
+        try {
+            this._fallbackPopup = new Audio("./assets/audio/popup.mp3");
+            this._fallbackPopup.preload = "auto";
+        } catch (e) { this._fallbackPopup = null; }
     }
 
     _decodeInto(url, trimSeconds, assign) {
@@ -160,6 +173,7 @@ class AudioManager {
         this.gameMusic.volume = this._computedMusicVol();
         this.gameMusic.play().catch(e => console.log("Game music blocked:", e));
     }
+    
 
     stopAllMusic() {
         this.currentTrack = null;
@@ -167,10 +181,32 @@ class AudioManager {
         if (this.gameMusic) { this.gameMusic.pause(); this.gameMusic.currentTime = 0; }
     }
 
+    playWin() {
+        MUSIC.stopAllMusic();
+        if (this.winSound) {
+            this.winSound.volume = this.masterVolume;
+            this.winSound.currentTime = 0;
+            this.winSound.play().catch(() => {});
+        }
+    }
+    
+    playLose() {
+        MUSIC.stopAllMusic();
+        if (this.loseSound) {
+            this.loseSound.volume = this.masterVolume;
+            this.loseSound.currentTime = 0;
+            this.loseSound.play().catch(() => {});
+        }
+    }
+
     playClick() {
         this._playBuffer(this.clickBuffer, this._fallbackClick, false);
     }
 
+    playPopup() {
+        this._playBuffer(null, this._fallbackPopup, false);
+    }
+    
     startTyping() {
         if (this.audioCtx && this.typingBuffer) {
             this.stopTyping(); // don't stack loops
