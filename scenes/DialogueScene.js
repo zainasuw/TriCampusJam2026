@@ -190,13 +190,10 @@ class DialogueScene {
             this.handleDebrief();
             return;
         }
-
-        if (nodeId === "tutorial_morning" && GameState.visitedToday) {
-            if (!GameState.visitedTodayList) GameState.visitedTodayList = [];
-            if (GameState.visitedTodayList.length >= 2) {
-                this.loadNode("dayEnd");
-                return;
-            }
+        if (nodeId === "tutorial_morning" && GameState.visitedTodayList &&
+            GameState.visitedTodayList.length >= 3) {
+            this.loadNode("dayEnd");
+            return;
         }
 
         if (nodeId === "dayEnd") {
@@ -622,7 +619,12 @@ class DialogueScene {
                         if (gameFlag) GameState.setFlag(gameFlag, "game");
                         if (dayFlag) GameState.setFlag(dayFlag, "day");
                         if (choice.visit) {
+
+                            // ability to visit all three bachelors in one day but prevent from visiting
+                            // the same bachelorette twice in a day
                             GameState.visitedToday = choice.visit;
+                            if (!GameState.visitedTodayList) GameState.visitedTodayList = [];
+                            GameState.visitedTodayList.push(choice.visit);
                             if (GameState.metCharacters[choice.visit] === false) {
                                 GameState.metCharacters[choice.visit] = true;
                             }
