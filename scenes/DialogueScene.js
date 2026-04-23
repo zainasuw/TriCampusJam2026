@@ -74,7 +74,8 @@ class DialogueScene {
         this.playerOpacity = 0;
 
         // tutorial blink driver. variable timing per cycle so it doesnt feel like a metronome
-        // frames 0 = open 1 = half 2 = closed
+        // frames 0 = open 1 = half 2 = closed. same frame index is used for the body sprite
+        // so the full-body blink stays in sync with the portrait box
         this.tutorialBlinkFrame = 0;
         this.tutorialBlinkPhase = "open";   // open, closing, closed, opening
         this.tutorialBlinkTimer = 0;
@@ -270,23 +271,27 @@ class DialogueScene {
         this.currentChoices = node.choices || null;
         this.nextNodeId = node.next || null;
 
-        // first time tutorial's portrait appears, mark him as met so he shows up in the I-menu
+        // first time tutorial's portrait appears, mark him as met so he shows up in the I-menu.
+        // keying off portrait (not speaker) means ??? nodes also count
         if (this.currentPortrait === "tutorial" && !GameState.metCharacters.tutorial) {
             GameState.metCharacters.tutorial = true;
         }
 
-        // load the bachelor sprite for this expression. tutorial doesnt get a body sprite (yet), hes only ever shown
-        // in the speaker label and portrait box
-        const folder = SPEAKER_FOLDER[this.currentSpeaker];
-        if (folder) {
-            let guyExpr = node.expression;
-            if (!guyExpr) guyExpr = "Neutral";
-            this.currentGuySprite = ASSET_MANAGER.getAsset(`./assets/characters/${folder}/${guyExpr}.png`);
-            if (!this.currentGuySprite) {
-                this.currentGuySprite = ASSET_MANAGER.getAsset(`./assets/characters/${folder}/Neutral.png`);
-            }
+        // load the bachelor sprite for this expression
+        if (this.currentPortrait === "tutorial") {
+            this.currentGuySprite = ASSET_MANAGER.getAsset("./assets/characters/tutorial/neutral.png");
         } else {
-            this.currentGuySprite = null;
+            const folder = SPEAKER_FOLDER[this.currentSpeaker];
+            if (folder) {
+                let guyExpr = node.expression;
+                if (!guyExpr) guyExpr = "Neutral";
+                this.currentGuySprite = ASSET_MANAGER.getAsset(`./assets/characters/${folder}/${guyExpr}.png`);
+                if (!this.currentGuySprite) {
+                    this.currentGuySprite = ASSET_MANAGER.getAsset(`./assets/characters/${folder}/Neutral.png`);
+                }
+            } else {
+                this.currentGuySprite = null;
+            }
         }
 
         // player sprite expression
@@ -406,7 +411,8 @@ class DialogueScene {
             }
         }
 
-        // tutorial blink animation. ticks whenever tutorial's portrait is on screen (including ??? speaker nodes)
+        // tutorial blink drives both the face portrait AND the body frame. same state machine,
+        // same irregular timing, so the full-body sprite blinks in sync with the portrait box
         if (this.currentPortrait === "tutorial") {
             this.updateTutorialBlink(dt);
         }
@@ -846,10 +852,6 @@ class DialogueScene {
     }
 
     drawCharSprite(ctx, isChoice) {
-        const guyImg = this.currentGuySprite;
-        let girlImg = this.currentGirlSprite;
-        if (!girlImg) girlImg = ASSET_MANAGER.getAsset("./assets/characters/girl1/Natu.png");
-
         const W = 1920, H = 1080;
         const breathY = Math.sin(this.breathTimer) * 4;
         const breathY2 = Math.sin(this.breathTimer * 0.85 + 1) * 3;
@@ -859,36 +861,39 @@ class DialogueScene {
         if (this.currentSpeaker && !isChoice) guyTalking = true;
 
         const girlScale = 0.85;
-        let girlX = -W * 0.28;
-        if (isChoice) girlX = -W * 0.18;
+        // girl stays at her fixed resting position regardless of phase
+        const girlX = -W * 0.28;
         const girlY = H * (1 - girlScale);
 
-        let guyBaseX = W * 0.28;
-        if (guyTalking) guyBaseX = W * 0.18;
-        // add the slide in offset on top. charCurrentX is 0 when arrived, positive when off-screen right
+        // guy stays at a fixed base position regardless of who is talking or whether
+        // the choice phase is active. charCurrentX handles the slide-in offset only
+        const guyBaseX = W * 0.28;
         const guyX = guyBaseX + this.charCurrentX;
 
         const guyScale = 1.45;
 
         const drawGirl = () => {
+            let girlImg = this.currentGirlSprite;
+            if (!girlImg) girlImg = ASSET_MANAGER.getAsset("./assets/characters/girl1/Natu.png");
             if (!girlImg) return;
             ctx.save();
             ctx.globalAlpha = this.playerOpacity;
             ctx.drawImage(girlImg, girlX, girlY + breathY, W * girlScale, H * girlScale);
             ctx.restore();
         };
+
         const drawGuy = () => {
-            if (!guyImg) return;
+            if (!this.currentGuySprite) return;
             ctx.save();
             ctx.globalAlpha = this.charOpacity;
             const gW = W * guyScale;
             const gH = H * guyScale;
             const scaleOffX = (gW - W) / 2;
-            ctx.drawImage(guyImg, guyX - scaleOffX, breathY2, gW, gH);
+            ctx.drawImage(this.currentGuySprite, guyX - scaleOffX, breathY2, gW, gH);
             ctx.restore();
         };
 
-        // z-order: whoever is talking gets drawn on top
+        // z order whoever is talking gets drawn on top
         if (guyTalking) {
             drawGirl();
             drawGuy();
