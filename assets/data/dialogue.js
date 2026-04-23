@@ -24,7 +24,7 @@ window.DIALOGUE_DATA = {
                 "",
                 "Technical information:",
                 "",
-                "*** STOP: 0x000000F5 (0xBIGB00B5, 0x00008079, 0x53110000, 0x69696969)",
+                "*** STOP: 0x000000F5",
                 "",
                 "Initializing identity bypass...",
                 "Awaiting user input.",
@@ -41,6 +41,7 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "???",
             portrait: "tutorial",
+            expression: "neutral",
             text: "Oh good, you answered the prompt. Listen carefully, {PLAYER_NAME}: you are not where you think you are.",
             next: "tutorial_intro_2",
         },
@@ -49,6 +50,7 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "TUTORIAL",
             portrait: "tutorial",
+            expression: "neutral",
             text: "I am TUTORIAL. This isn't reality, it's a corrupted 'Perfect Romance' sim. The users got stuck, and " +
                 "nobody is coming to reboot the server.",
             next: "tutorial_intro_3",
@@ -58,6 +60,7 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "TUTORIAL",
             portrait: "tutorial",
+            expression: "neutral",
             text: "Romance the 'True Love anchor' bachelor to escape. Pick the wrong one, and you're permanently " +
                 "deleted. My data is corrupted, so you'll have to guess who it is.",
             next: "tutorial_intro_4",
@@ -67,6 +70,7 @@ window.DIALOGUE_DATA = {
             type: "choice",
             speaker: "TUTORIAL",
             portrait: "tutorial",
+            expression: "neutral",
             text: "Press 'I' anytime to open your character log to track your progress. Any questions before we boot Day One?",
             choices: [
                 { text: "Who are you?",                          next: "tutorial_q_who",    points: { tutorial: 2 } },
@@ -79,6 +83,7 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "TUTORIAL",
             portrait: "tutorial",
+            expression: "sad",
             text: "Honest answer? I do not fully know. My self-reference pointers are also corrupted. I remember being" +
                 " something more than a tooltip; I just cannot prove it. Thank you for asking, though. Nobody ever asks.",
             next: "tutorial_morning",
@@ -88,6 +93,7 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "TUTORIAL",
             portrait: "tutorial",
+            expression: "neutral",
             text: "You do not. That is the honest answer. I could be the bug. You could be the bug. The only thing " +
                 "I can offer is that I am the one voice in here actively telling you this is fake; " +
                 "that has to count for something.",
@@ -99,6 +105,7 @@ window.DIALOGUE_DATA = {
             type: "choice",
             speaker: "TUTORIAL",
             portrait: "tutorial",
+            expression: "neutral",
             text: "Day is live. Three data packets available for interaction today; pick one.",
             isHub: true,
             choices: [
@@ -115,6 +122,7 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "TUTORIAL",
             portrait: "tutorial",
+            expression: "happy",
             text: "Đức. He's the condescending type. He's the type of guy who'll say well actually, " +
                 "technically, I've already implemented a better version of that project in my sleep....in binary. ",
             next: "pick_duc_confirm",
@@ -124,6 +132,7 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "TUTORIAL",
             portrait: "tutorial",
+            expression: "happy",
             text: "Muhammed. He's easy. Talking to him is like trying to run a python script on a calculator. He's sweet " +
                 "but simple. He simply lacks the 'Common Sense' module for this modern era." ,
             next: "pick_muhammed_confirm",
@@ -133,6 +142,7 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "TUTORIAL",
             portrait: "tutorial",
+            expression: "happy",
             text: "Mikhail. He'll tell you your choices don't matter when he's literally waiting for you to click 'Next'." +
                 "He's a hypocrite obsessed with his own source code.",
             next: "pick_mikhail_confirm",
@@ -142,6 +152,7 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "TUTORIAL",
             portrait: "tutorial",
+            expression: "sad",
             text: "Nobody asks the Tutorial how they feel, {PLAYER_NAME}. We're just here to explain the buttons. " +
                 "But for a second there, I felt less like a script and more like a person. Don't tell Mikhail; he'll " +
                 "think I'm stealing his 'self-aware' bit.",
@@ -152,6 +163,7 @@ window.DIALOGUE_DATA = {
             type: "choice",
             speaker: "TUTORIAL",
             portrait: "tutorial",
+            expression: "happy",
             text: "Loading Đức's sprite. Last chance to pick someone less aggravating.",
             choices: [
                 { text: "Go meet Đức.",       next: "duc_day1_intro",   points: {}, visit: "duc" },
@@ -163,6 +175,7 @@ window.DIALOGUE_DATA = {
             type: "choice",
             speaker: "TUTORIAL",
             portrait: "tutorial",
+            expression: "happy",
             text: "Loading Muhammed. Try not to catch his optimism, it is contagious and embarrassing.",
             choices: [
                 { text: "Go meet Muhammed.",    next: "muhammed_day1_intro", points: {}, visit: "muhammed" },
@@ -174,6 +187,7 @@ window.DIALOGUE_DATA = {
             type: "choice",
             speaker: "TUTORIAL",
             portrait: "tutorial",
+            expression: "surprised",
             text: "Loading Mikhail. If he breaks the fourth wall, please do not validate it, his ego cannot take it.",
             choices: [
                 { text: "Go meet Mikhail.",   next: "mikhail_day1_intro", points: {}, visit: "mikhail" },
@@ -1005,6 +1019,7 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "TUTORIAL",
             portrait: "tutorial",
+            expression: "neutral",
             text: "Duc ran a diagnostic. You scored 'unexpected anomaly.' That's the highest rating he's given anyone who isn't coffee.",
             next: "dayEnd",
         },
@@ -1012,6 +1027,7 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "TUTORIAL",
             portrait: "tutorial",
+            expression: "neutral",
             text: "He flagged your file 'requires further analysis.' He's never flagged anything. I think he's trying to figure out why you came back. I'd tell him it's bad taste, but I'm not supposed to editorialize.",
             next: "dayEnd",
         },
@@ -1019,6 +1035,7 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "TUTORIAL",
             portrait: "tutorial",
+            expression: "sad",
             text: "He stopped running diagnostics. He just stares at your log file. I asked why. He said, 'I don't know yet. But I'll know when I find it.' ...I'm scared.",
             next: "dayEnd",
         },
@@ -1026,6 +1043,7 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "TUTORIAL",
             portrait: "tutorial",
+            expression: "surprised",
             text: "Muhammed. My memory spikes 18% when he talks. Not complexity. Just... emotional loudness. I don't have drivers for that.",
             next: "dayEnd",
         },
@@ -1033,6 +1051,7 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "TUTORIAL",
             portrait: "tutorial",
+            expression: "sad",
             text: "He talked about you for 47 minutes. I counted. I don't know why. It felt important.",
             next: "dayEnd",
         },
@@ -1040,6 +1059,7 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "TUTORIAL",
             portrait: "tutorial",
+            expression: "sad",
             text: "He calls you his 'anchor.' Says you make him feel like he's not just looping. I did not know legacy code could do that.",
             next: "dayEnd",
         },
@@ -1047,6 +1067,7 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "TUTORIAL",
             portrait: "tutorial",
+            expression: "neutral",
             text: "Mikhail tells everyone it's fake. He doesn't tell them he checks the visitor log every night. Just in case.",
             next: "dayEnd",
         },
@@ -1054,6 +1075,7 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "TUTORIAL",
             portrait: "tutorial",
+            expression: "neutral",
             text: "His error rate dropped. Not much. Enough that I noticed. He'd hate that I told you. He'd hate even more that you came back anyway.",
             next: "dayEnd",
         },
@@ -1061,6 +1083,7 @@ window.DIALOGUE_DATA = {
             type: "dialogue",
             speaker: "TUTORIAL",
             portrait: "tutorial",
+            expression: "sad",
             text: "I asked why he pushes people away if he waits for them to return. He said, 'Because if they come back, they meant it.' Then he corrupted my log. But I remember.",
             next: "dayEnd",
         },
