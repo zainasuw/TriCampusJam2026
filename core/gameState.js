@@ -27,7 +27,6 @@ const GameState = {
     },
     // who did the player visit today? prevents picking the same bachelor twice in one day
     visitedToday: null,
-
     lockedBachelor: null,
     memories: [],
 
