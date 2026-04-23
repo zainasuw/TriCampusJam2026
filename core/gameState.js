@@ -27,8 +27,10 @@ const GameState = {
     },
     // who did the player visit today? prevents picking the same bachelor twice in one day
     visitedToday: null,
+
     lockedBachelor: null,
     memories: [],
+
 
     // flag sets for one-time rewards
     flagsGame: {},   // persistent for the whole run
@@ -105,6 +107,7 @@ const GameState = {
     advanceDay() {
         this.currentDay++;
         this.visitedToday = null;
+        this.visitedTodayList = [];
         this.flagsDay = {};
     },
 
@@ -114,6 +117,7 @@ const GameState = {
         this.relationshipPoints = { duc: 0, muhammed: 0, mikhail: 0, tutorial: 0 };
         this.chaosPoints = 0;
         this.glitchLog = [];
+        this.visitedTodayList = [];
         this.metCharacters = { duc: false, muhammed: false, mikhail: false, tutorial: false };
         this.visitCounts = { duc: 0, muhammed: 0, mikhail: 0 };
         this.visitedToday = null;
