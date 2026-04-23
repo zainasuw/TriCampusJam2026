@@ -37,8 +37,8 @@ class BootDayScene {
         this.charsPerSec = 220;
         this.typingAccum = 0;
 
-        this.BG_COLOR   = "#4a0020";
-        this.FG_COLOR   = "#FFFFFF";
+        this.BG_COLOR   = "#d4789a";
+        this.FG_COLOR   = "#3d1a2e";
 
         // hearts show up and die if ur getting too close to a bachelor
         var maxPts = Math.max(
@@ -68,11 +68,18 @@ class BootDayScene {
         this.cursorVisible = true;
 
         // typing SFX while the BSOD types itself out
-        MUSIC.startTyping();
+        //MUSIC.startTyping();
     }
 
     update() {
         const dt = this.game.clockTick;
+
+        // typing BSOD sound starts on the first update to sync better with the text appearing, 
+        // and to avoid starting if the scene is skipped
+        if (!this._typingStarted) {
+            this._typingStarted = true;
+            MUSIC.startTyping();
+        }
 
         // tick vfx
         for (var v = this.activeVFX.length - 1; v >= 0; v--) {

@@ -192,6 +192,26 @@ class AudioManager {
             this._fallbackTyping.play().catch(() => {});
         }
     }
+    startDialogueTyping() {
+        if (this.audioCtx && this.typingBuffer) {
+            this.stopTyping();
+            const src = this.audioCtx.createBufferSource();
+            src.buffer = this.typingBuffer;
+            src.loop = true;
+            src.playbackRate.value = 1.2;  
+    
+            const g = this.audioCtx.createGain();
+            g.gain.value = this._computedSfxVol() * 0.4;  
+            src.connect(g).connect(this.audioCtx.destination);
+            src.start(0);
+            this.typingLoopNode = { source: src, gain: g };
+        } else if (this._fallbackTyping) {
+            this._fallbackTyping.volume = this._computedSfxVol() * 0.4;
+            this._fallbackTyping.playbackRate = 1.2;
+            this._fallbackTyping.currentTime = 0;
+            this._fallbackTyping.play().catch(() => {});
+        }
+    }
 
     stopTyping() {
         if (this.typingLoopNode) {
