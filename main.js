@@ -66,6 +66,7 @@ for (const expr of GUY_EXPRESSIONS) {
 ASSET_MANAGER.queueDownload("./assets/characters/guy1/Face.png");
 ASSET_MANAGER.queueDownload("./assets/characters/guy2/Face.png");
 ASSET_MANAGER.queueDownload("./assets/characters/guy3/Face.png");
+ASSET_MANAGER.queueDownload("./assets/characters/tutorial/face.png");
 
 const GIRL_EXPRESSIONS = ["Natu", "Smiling", "Angry", "Sad", "Sad_tears",
 	"Surprised", "neutral_pose", "Close_blushing", "open_blushing", "FullBlink", "BaseLine"];

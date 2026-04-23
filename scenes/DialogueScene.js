@@ -270,8 +270,8 @@ class DialogueScene {
         this.currentChoices = node.choices || null;
         this.nextNodeId = node.next || null;
 
-        // first time tutorial speaks, mark him as met so he shows up in the I-menu
-        if (this.currentSpeaker === "TUTORIAL" && !GameState.metCharacters.tutorial) {
+        // first time tutorial's portrait appears, mark him as met so he shows up in the I-menu
+        if (this.currentPortrait === "tutorial" && !GameState.metCharacters.tutorial) {
             GameState.metCharacters.tutorial = true;
         }
 
@@ -406,9 +406,8 @@ class DialogueScene {
             }
         }
 
-        // tutorial blink animation. only ticks when tutorial is the current speaker so we dont burn cycles when hes
-        // not on screen. this drives sprite frame index 0/1/2 of his sheet
-        if (this.currentSpeaker === "TUTORIAL") {
+        // tutorial blink animation. ticks whenever tutorial's portrait is on screen (including ??? speaker nodes)
+        if (this.currentPortrait === "tutorial") {
             this.updateTutorialBlink(dt);
         }
 
@@ -904,19 +903,22 @@ class DialogueScene {
         const containerImg = AM.getAsset("./assets/DatingGameUI/CharacterScreen/CharacterContainer.png");
         if (containerImg) ctx.drawImage(containerImg, c.x, c.y, c.w, c.h);
 
-        // tutorial face uses the blink sprite sheet, everyone else uses a single Face.png
-        if (this.currentSpeaker === "TUTORIAL") {
+        // tutorial face uses the blink sprite sheet, everyone else uses a single Face.png.
+        // check portrait key (not speaker label) so the face renders even on nodes where speaker is "???"
+        if (this.currentPortrait === "tutorial") {
             const sheet = ASSET_MANAGER.getAsset("./assets/characters/tutorial/face.png");
             if (sheet) {
-                const ip = 18;
+                // tutorial's sheet is wider relative to the container so we scale it down a bit
+                // so the face doesnt bleed past the container edges
+                const ip = 30;
                 const frameW = sheet.width / 3;
                 const frameH = sheet.height;
                 const sx = this.tutorialBlinkFrame * frameW;
                 ctx.drawImage(
                     sheet,
                     sx, 0, frameW, frameH,
-                    c.x + ip + FACE_X_OFFSET, c.y + ip + FACE_Y_OFFSET,
-                    c.w - ip * 2, c.h - ip * 2
+                    c.x + ip + FACE_X_OFFSET + 9, c.y + ip + FACE_Y_OFFSET + 30,
+                    c.w - ip * 2.5, c.h - ip * 2.5
                 );
             }
             return;
