@@ -31,7 +31,7 @@ class NameInputScene {
             "",
             "Technical information:",
             "",
-            "*** STOP: 0x000000F5 (0xBIGB00B5, 0x00008079, 0x53110000, 0x69696969)",
+            "*** STOP: 0x000000F5",
             "",
             "Initializing identity bypass; awaiting user input.",
         ];

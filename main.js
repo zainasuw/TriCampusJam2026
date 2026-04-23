@@ -68,6 +68,11 @@ ASSET_MANAGER.queueDownload("./assets/characters/guy2/Face.png");
 ASSET_MANAGER.queueDownload("./assets/characters/guy3/Face.png");
 ASSET_MANAGER.queueDownload("./assets/characters/tutorial/face.png");
 ASSET_MANAGER.queueDownload("./assets/characters/tutorial/neutral.png");
+ASSET_MANAGER.queueDownload("./assets/characters/tutorial/angry.png");
+ASSET_MANAGER.queueDownload("./assets/characters/tutorial/happy.png");
+ASSET_MANAGER.queueDownload("./assets/characters/tutorial/sad.png");
+ASSET_MANAGER.queueDownload("./assets/characters/tutorial/smiling.png");
+ASSET_MANAGER.queueDownload("./assets/characters/tutorial/surprised.png");
 
 const GIRL_EXPRESSIONS = ["Natu", "Smiling", "Angry", "Sad", "Sad_tears",
 	"Surprised", "neutral_pose", "Close_blushing", "open_blushing", "FullBlink", "BaseLine"];

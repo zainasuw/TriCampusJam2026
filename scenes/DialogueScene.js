@@ -277,9 +277,14 @@ class DialogueScene {
             GameState.metCharacters.tutorial = true;
         }
 
-        // load the bachelor sprite for this expression
+        // load the bachelor sprite for this expression. tutorial uses his own expression PNGs
         if (this.currentPortrait === "tutorial") {
-            this.currentGuySprite = ASSET_MANAGER.getAsset("./assets/characters/tutorial/neutral.png");
+            let tutExpr = node.expression;
+            if (!tutExpr) tutExpr = "neutral";
+            this.currentGuySprite = ASSET_MANAGER.getAsset(`./assets/characters/tutorial/${tutExpr}.png`);
+            if (!this.currentGuySprite) {
+                this.currentGuySprite = ASSET_MANAGER.getAsset("./assets/characters/tutorial/neutral.png");
+            }
         } else {
             const folder = SPEAKER_FOLDER[this.currentSpeaker];
             if (folder) {
