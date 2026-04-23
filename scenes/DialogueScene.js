@@ -619,7 +619,10 @@ class DialogueScene {
                         if (gameFlag) GameState.setFlag(gameFlag, "game");
                         if (dayFlag) GameState.setFlag(dayFlag, "day");
                         if (choice.visit) {
-
+                            if (GameState.visitedTodayList && GameState.visitedTodayList.includes(choice.visit)) {
+                                this.loadNode("tutorial_morning");
+                                return;
+                            }
                             // ability to visit all three bachelors in one day but prevent from visiting
                             // the same bachelorette twice in a day
                             GameState.visitedToday = choice.visit;
