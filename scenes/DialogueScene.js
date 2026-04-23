@@ -351,6 +351,14 @@ class DialogueScene {
             });
             return;
         }
+        if (GameState.currentDay >= 3) {
+            this.fadeTo(() => {
+                this.game.addEntity(new EndingScene(this.game, "AUTHENTIC"));
+                document.removeEventListener("keydown", this.keyHandler);
+                this.removeFromWorld = true;
+            });
+            return;
+        }
         GameState.advanceDay();
         this.fadeTo(() => {
             this.game.addEntity(new BootDayScene(this.game, "tutorial_morning"));
