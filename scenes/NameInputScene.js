@@ -8,13 +8,18 @@ class NameInputScene {
         this.removeFromWorld = false;
 
         this.playerName = "";
-        // phase: "typing_boot" -> "await_input" -> "input" -> "accepted" -> "fading"
+        // phase: "typing_boot" -> "await_input" -> "input" -> "accepted" -> "glitching"
         this.phase = "typing_boot";
         this.fadeAlpha = 0;
         this.acceptedTimer = 0;
         this.cursorBlink = 0;
         this.cursorVisible = true;
 
+        this.glitchT = 0;
+        this.barY = [];
+        for (var i = 0; i < 25; i++) {
+            this.barY.push(Math.random() * 1080);
+        }
         // full BSOD text. Kept short and thematic (not real MS BSOD wall of text).
         // Each entry is a paragraph; rendered with word-wrap.
         this.bsodParagraphs = [
@@ -113,15 +118,13 @@ class NameInputScene {
             }
         } else if (this.phase === "accepted") {
             this.acceptedTimer += dt;
-            if (this.acceptedTimer >= 1.4) this.phase = "fading";
-        } else if (this.phase === "fading") {
-            this.fadeAlpha += dt * 2;
-            if (this.fadeAlpha >= 1) {
+            if (this.acceptedTimer >= 1.4) this.phase = "glitching"; // was "fading"
+        }  else if (this.phase === "glitching") {
+            this.glitchT += dt;
+            if (this.glitchT >= 2.2) {
                 document.removeEventListener("keydown", this.keyHandler);
-                MUSIC.stopTyping(); // safety: make sure it's off before leaving
-                
+                MUSIC.stopTyping();
                 MUSIC.playGameMusic();
-                
                 GameState.playerName = this.playerName.trim() || "USER";
                 this.game.addEntity(new DialogueScene(this.game, "tutorial_intro_1"));
                 this.removeFromWorld = true;
@@ -228,10 +231,28 @@ class NameInputScene {
             }
         }
 
-        // fade to black before handing off
-        if (this.phase === "fading") {
-            ctx.fillStyle = `rgba(0,0,0,${Math.min(this.fadeAlpha, 1)})`;
-            ctx.fillRect(0, 0, W, H);
-        }
+        // glitch effects after entering name and accepting bypass. 
+        if (this.phase === "glitching") {
+    var gp = Math.min(1, this.glitchT / 2.2);
+    var intensity = gp * 16;
+    ctx.save();
+    ctx.translate(
+        (Math.random() - 0.5) * intensity,
+        (Math.random() - 0.5) * intensity
+    );
+    ctx.globalAlpha = gp * 0.5;
+    for (var i = 0; i < this.barY.length; i++) {
+        this.barY[i] += (Math.random() - 0.3) * 50;
+        if (this.barY[i] > H) this.barY[i] = 0;
+        if (this.barY[i] < 0) this.barY[i] = H;
+        ctx.fillStyle = Math.random() < 0.3 ? "#ff0000"
+            : Math.random() < 0.5 ? "#00ffff" : "#ff69b4";
+        ctx.fillRect(0, this.barY[i], W, 2 + Math.random() * 10);
+    }
+    ctx.globalAlpha = Math.pow(gp, 2);
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+}
     }
 }
