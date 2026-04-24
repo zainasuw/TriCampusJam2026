@@ -39,7 +39,7 @@ class NameInputScene {
         // typewriter state for the whole block
         this.fullText = this.bsodParagraphs.join("\n");
         this.typedChars = 0;
-        this.charsPerSec = 180;        // fast terminal typing
+        this.charsPerSec = 280;
         this.typingAccum = 0;
 
         // after text finishes typing, wait a beat before showing input prompt
@@ -211,7 +211,7 @@ class NameInputScene {
         }
 
         // input prompt
-        if (this.phase === "input" || this.phase === "accepted" || this.phase === "fading") {
+        if (this.phase === "input" || this.phase === "accepted") {
             const py = y + 28;
             ctx.font = this.FONT_HEAD;
             ctx.fillStyle = this.FG_COLOR;
@@ -223,9 +223,9 @@ class NameInputScene {
                 ctx.fillText("[ Press ENTER to confirm ]", this.MARGIN_X, py + this.LINE_H + 6);
             }
 
-            if (this.phase === "accepted" || this.phase === "fading") {
+            if (this.phase === "accepted") {
                 ctx.fillText("BYPASS ACCEPTED.", this.MARGIN_X, py + this.LINE_H);
-                if (this.acceptedTimer > 0.5 || this.phase === "fading") {
+                if (this.acceptedTimer > 0.5) {
                     ctx.fillText("WELCOME, " + this.playerName + ".", this.MARGIN_X, py + this.LINE_H * 2);
                 }
             }
