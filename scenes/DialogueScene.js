@@ -18,6 +18,13 @@ const SPEAKER_FACE = {
     "MIKHAIL": "./assets/characters/guy3/Face.png",
 };
 
+// three fonts for the muhammed loop bug. same text, 3 different visual passes
+const MUHAMMED_LOOP_FONTS = [
+    "bold 32px 'The Bold Font', Georgia, serif",
+    "italic 32px 'Roboto', sans-serif",
+    "bold 32px 'Lucida Console', monospace",
+];
+
 // charPhase state machine for the bachelor sprite sliding, off no character on screen, entering  sliding in from off
 // screen right toward target X, speaking  fully arrived. dialogue box and text are allowed to render exiting
 // sliding back out to the right. when done, load any pending queued node
@@ -50,7 +57,6 @@ class DialogueScene {
         this.currentChoices = null;
         this.nextNodeId = null;
         this.currentNode = null;
-        this.currentNodeId = null;
 
         // system screen state
         this.systemLines = [];
@@ -59,8 +65,10 @@ class DialogueScene {
         this.pauseTimer = 0;
         this.pendingNextForSystem = null;
 
-        // muhammed loop bug. text is shown 3 times, fresh boxes, click 3 times to escape
-        this.muhammedLoopPressed = 0;
+        // muhammed loop bug. text types out 3 times in 3 different dialogue containers,
+        // each one a separate box the player clicks through. currentLoopIdx tells us which
+        // font / iteration we're on. -1 means not in a loop node.
+        this.muhammedLoopIdx = -1;
 
         // duc reboot shake
         this.ducShakeTimer = 0;
@@ -86,7 +94,6 @@ class DialogueScene {
         this.charLerpT = 0;
         this.charLerpDuration = CHAR_SLIDE_DURATION;
         this.charCurrentX = CHAR_OFFSCREEN_X;
-        this.charTargetX = 0;
         // node id queued up during an EXITING transition. cleared once loaded
         this.pendingNodeId = null;
 
@@ -99,7 +106,6 @@ class DialogueScene {
         // gear button bottom right corner
         this.gearBtn = {x: 1920 - 180, y: 1080 - 120, w: 140, h: 90};
         this.gearHovered = false;
-        this.gearPressed = false;
 
         // scene fades
         this.fadeAlpha = 1;
@@ -164,10 +170,19 @@ class DialogueScene {
         return text.replace(/{PLAYER_NAME}/g, GameState.playerName);
     }
 
+    // remap to the right intro node. if a character has never been met before, force _day1_intro even if it's day 2 or
+    // 3 so the player always gets an introduction instead of a "welcome back"
     remapForDay(nodeId) {
-        const match = nodeId.match(/^(duc|muhammed|mikhail)_day1_intro$/);
+        const match = nodeId.match(/^(duc|muhammed|mikhail)_day(\d+)_intro$/);
         if (!match) return nodeId;
         const who = match[1];
+
+        // first time meeting check if they haven't been met, this is their intro regardless of day
+        if (!GameState.metCharacters[who]) {
+            GameState.visitCounts[who]++;
+            return `${who}_day1_intro`;
+        }
+
         GameState.visitCounts[who]++;
         let interactionNum = GameState.visitCounts[who];
         if (interactionNum > 3) interactionNum = 3;
@@ -231,11 +246,14 @@ class DialogueScene {
             return;
         }
 
-        this.currentNodeId = nodeId;
         this.currentNode = node;
 
-        // muhammed loop counter resets per node load
-        this.muhammedLoopPressed = 0;
+        // set up muhammed loop state if this node triggers it
+        if (node.bug === "muhammed_loop") {
+            this.muhammedLoopIdx = 0;
+        } else {
+            this.muhammedLoopIdx = -1;
+        }
 
         if (node.type === "system") {
             this.phase = "system";
@@ -321,6 +339,16 @@ class DialogueScene {
             this.phase = "char_entering";
         }
         // if charPhase is already SPEAKING we keep going. same character continuing their turn
+    }
+
+    // restart the typewriter for the current node text, used by muhammed loop to re play the same text in a fresh
+    // dialogue container
+    restartTyping() {
+        this.displayText = "";
+        this.charIndex = 0;
+        this.typingTimer = 0;
+        this.phase = "typing";
+        MUSIC.startDialogueTyping();
     }
 
     handleDebrief() {
@@ -411,7 +439,7 @@ class DialogueScene {
         const click = this.game.click;
         const mouse = this.game.mouse;
 
-        // tick vfx animations
+        // tick vfx animations. using a plain for loop because chained .filter would allocate every frame
         for (let v = this.activeVFX.length - 1; v >= 0; v--) {
             const fx = this.activeVFX[v];
             fx.timer += dt;
@@ -462,10 +490,6 @@ class DialogueScene {
         }
 
         if (click && this.phase !== "system" && this.phase !== "system_pause" && this.gearHit(click)) {
-            this.gearPressed = true;
-            setTimeout(() => {
-                this.gearPressed = false;
-            }, 120);
             this.paused = true;
             this.game.addEntity(new SettingsScene(this.game, this));
             this.game.click = null;
@@ -522,7 +546,7 @@ class DialogueScene {
             }
             if (this.charIndex >= this.fullText.length) {
                 this.phase = "idle";
-                MUSIC.stopTyping(); ;
+                MUSIC.stopTyping();
                 justFinishedTyping = true;
             }
         }
@@ -543,14 +567,14 @@ class DialogueScene {
             }
             if (this.phase === "idle") {
                 const n = this.NEXT;
-                this.nextBtnHovered = (mouse.x >= n.x && mouse.x <= n.x + n.w &&
-                    mouse.y >= n.y && mouse.y <= n.y + n.h);
+                if (mouse.x >= n.x && mouse.x <= n.x + n.w &&
+                    mouse.y >= n.y && mouse.y <= n.y + n.h) {
+                    this.nextBtnHovered = true;
+                }
             }
         }
 
         if (click) {
-            const cx = click.x;
-            const cy = click.y;
             this.game.click = null;
 
             // skip the typewriter on any click. clicking once finishes the line, clicking again advances
@@ -564,27 +588,25 @@ class DialogueScene {
             }
 
             if (this.phase === "idle") {
-                // muhammed loop bug. needs 3 separate clicks to escape, each one paints a new
-                // dialogue box stacked underneath in a different font
-                if (this.currentNode && this.currentNode.bug === "muhammed_loop") {
-                    this.muhammedLoopPressed++;
-                    if (this.muhammedLoopPressed < 3) {
-
+                // muhammed loop bug. each click advances to the next iteration (new dialogue box, new font)
+                // once we've clicked through all 3 iterations we advance to the next node normally
+                if (this.currentNode && this.currentNode.bug === "muhammed_loop" && this.muhammedLoopIdx >= 0) {
+                    if (this.muhammedLoopIdx < MUHAMMED_LOOP_FONTS.length - 1) {
+                        this.muhammedLoopIdx++;
                         this.nextBtnPressed = true;
-                        setTimeout(() => {
-                            this.nextBtnPressed = false;
-                        }, 120);
+                        setTimeout(() => { this.nextBtnPressed = false; }, 120);
+                        this.restartTyping();
                         return;
                     }
+                    // all 3 loops done — fall through to normal next-node advance
+                    this.muhammedLoopIdx = -1;
                 }
 
                 // click anywhere to advance. used to require clicking on the box or the next arrow
                 // but everyone tried clicking the screen first so we just made the screen the button
                 if (this.nextBtnHovered) {
                     this.nextBtnPressed = true;
-                    setTimeout(() => {
-                        this.nextBtnPressed = false;
-                    }, 120);
+                    setTimeout(() => { this.nextBtnPressed = false; }, 120);
                 }
                 if (this.currentChoices) {
                     this.phase = "choice";
@@ -772,20 +794,9 @@ class DialogueScene {
         } else if (this.phase === "end") {
             // nothing to draw. the next scene takes over
         } else {
+            // draw VFX first so they appear BEHIND the character sprites instead of on top
+            this.drawVFXLayer(ctx);
             this.drawCharacterAndDialogue(ctx, AM);
-        }
-
-        // vfx layer above sprites
-        for (const fx of this.activeVFX) {
-            const img = ASSET_MANAGER.getAsset(fx.def.asset);
-            if (!img) continue;
-            const fw = img.width / fx.def.cols;
-            const fh = img.height / fx.def.rows;
-            const sx = (fx.frame % fx.def.cols) * fw;
-            const sy = Math.floor(fx.frame / fx.def.cols) * fh;
-            const dw = fw * fx.scale;
-            const dh = fh * fx.scale;
-            ctx.drawImage(img, sx, sy, fw, fh, fx.x - dw / 2, fx.y - dh / 2, dw, dh);
         }
 
         if (this.phase !== "system" && this.phase !== "system_pause") {
@@ -800,6 +811,24 @@ class DialogueScene {
         if (this.fadingOut) {
             ctx.fillStyle = `rgba(0,0,0,${this.fadeOutAlpha})`;
             ctx.fillRect(0, 0, W, H);
+        }
+    }
+
+    // pulled vfx rendering out of the main draw so it can run before character sprites. order ends up being
+    // background -> vfx -> sprites -> dialogue UI -> hud. vfx ends up behind the characters now (like what we talked
+    // about in the car)
+    drawVFXLayer(ctx) {
+        for (let i = 0; i < this.activeVFX.length; i++) {
+            const fx = this.activeVFX[i];
+            const img = ASSET_MANAGER.getAsset(fx.def.asset);
+            if (!img) continue;
+            const fw = img.width / fx.def.cols;
+            const fh = img.height / fx.def.rows;
+            const sx = (fx.frame % fx.def.cols) * fw;
+            const sy = Math.floor(fx.frame / fx.def.cols) * fh;
+            const dw = fw * fx.scale;
+            const dh = fh * fx.scale;
+            ctx.drawImage(img, sx, sy, fw, fh, fx.x - dw / 2, fx.y - dh / 2, dw, dh);
         }
     }
 
@@ -858,10 +887,6 @@ class DialogueScene {
             this.drawDialogueBox(ctx, AM);
             this.drawCharacterContainer(ctx, AM);
             this.drawSpeakerLabel(ctx);
-
-            if (isChoice && this.currentChoices) {
-                this.drawReplyButtons(ctx, AM);
-            }
         }
 
         ctx.restore();
@@ -1044,18 +1069,32 @@ class DialogueScene {
         ctx.textBaseline = "top";
         ctx.fillStyle = "#1a1a4e";
 
-        // TODO: Fix Dialogue box still not working properly
-        // muhammed loop bug. each click stacks ANOTHER dialogue box below the first one, each in a different font. keeps the text from being squished into one tiny strip
-        if (this.currentNode && this.currentNode.bug === "muhammed_loop" && this.phase === "idle") {
-            this.drawMuhammedLoopBoxes(ctx, AM, renderText);
-            return;
+        // pick the font based on whether we're inside a muhammed loop iteration each iteration of the loop uses a
+        // different font for the SAME text, same typewriter, just a fresh dialogue container rendered each time
+        // player clicks
+        let textFont = "bold 32px 'The Bold Font', Georgia, serif";
+        if (this.currentNode && this.currentNode.bug === "muhammed_loop" && this.muhammedLoopIdx >= 0) {
+            textFont = MUHAMMED_LOOP_FONTS[this.muhammedLoopIdx];
         }
+        ctx.font = textFont;
 
-        ctx.font = "bold 32px 'The Bold Font', Georgia, serif";
         this.wrapText(ctx, renderText, d.x + 280, d.y + 40, d.w - 380, 44);
 
+        // little hint for the muhammed loop so the player knows clicks are the way out
+        if (this.currentNode && this.currentNode.bug === "muhammed_loop" && this.muhammedLoopIdx >= 0) {
+            ctx.font = "italic 18px 'Roboto', sans-serif";
+            ctx.fillStyle = "rgba(100, 100, 140, 0.85)";
+            ctx.fillText(
+                `(loop ${this.muhammedLoopIdx + 1} / 3)`,
+                d.x + 280,
+                d.y + d.h - 30
+            );
+            ctx.fillStyle = "#1a1a4e"; // restore for anything else
+        }
+
         if (this.phase === "idle") {
-            const hasNext = this.nextNodeId || this.currentChoices;
+            const hasNext = this.nextNodeId || this.currentChoices ||
+                (this.currentNode && this.currentNode.bug === "muhammed_loop" && this.muhammedLoopIdx >= 0);
             if (hasNext) {
                 const n = this.NEXT;
                 let key = "./assets/DatingGameUI/NextBtn.png";
@@ -1065,62 +1104,6 @@ class DialogueScene {
                 const img = AM.getAsset(key);
                 if (img) ctx.drawImage(img, n.x, n.y, n.w, n.h);
             }
-        }
-    }
-
-    // TODO: This was temporarily put in fix me
-    // muhammed loop renderer. up to 3 stacked mini-boxes, each in its own font, each fading to gray once theyve been
-    // clicked past. forms a visual stack of his self-repeating dialogue
-    drawMuhammedLoopBoxes(ctx, AM, renderText) {
-        const d = this.DLG;
-        const dlgImg = AM.getAsset("./assets/DatingGameUI/Dialogue/DialogueContainer.png");
-
-        // each repeat gets its own slim box stacked in the same dialogue area. height is split so all 3 fit even on the original DLG height
-        const repeats = 3;
-        const boxGap = 6;
-        const boxH = (d.h - boxGap * (repeats - 1)) / repeats;
-        const fonts = [
-            "bold 22px 'The Bold Font', Georgia, serif",
-            "italic 22px 'Roboto', sans-serif",
-            "bold 22px 'Lucida Console', monospace",
-        ];
-
-        for (let i = 0; i < repeats; i++) {
-            const by = d.y + i * (boxH + boxGap);
-            // draw a separate dialogue container per loop so it really feels like 3 boxes not one with three text columns
-            if (dlgImg) {
-                ctx.save();
-                if (i < this.muhammedLoopPressed) ctx.globalAlpha = 0.35;
-                ctx.drawImage(dlgImg, d.x, by, d.w, boxH);
-                ctx.restore();
-            }
-            ctx.save();
-            if (i < this.muhammedLoopPressed) ctx.globalAlpha = 0.4;
-            ctx.font = fonts[i];
-            ctx.fillStyle = "#1a1a4e";
-            // line height drops slightly for the smaller boxes
-            this.wrapText(ctx, renderText, d.x + 280, by + 18, d.w - 380, 26);
-            ctx.restore();
-        }
-
-        ctx.font = "italic 18px 'Roboto', sans-serif";
-        ctx.fillStyle = "rgba(100, 100, 140, 0.85)";
-        ctx.textAlign = "left";
-        ctx.fillText(
-            `(loop ${this.muhammedLoopPressed + 1} / 3, click anywhere to skip)`,
-            d.x + 280,
-            d.y + d.h - 26
-        );
-
-        // next arrow on the very last loop click
-        if (this.muhammedLoopPressed >= 0) {
-            const n = this.NEXT;
-            let key = "./assets/DatingGameUI/NextBtn.png";
-            if (this.nextBtnHovered || this.nextBtnPressed) {
-                key = "./assets/DatingGameUI/NextBtnPressed.png";
-            }
-            const img = AM.getAsset(key);
-            if (img) ctx.drawImage(img, n.x, n.y, n.w, n.h);
         }
     }
 
