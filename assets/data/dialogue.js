@@ -1021,7 +1021,7 @@ window.DIALOGUE_DATA = {
             portrait: "tutorial",
             expression: "neutral",
             text: "Duc ran a diagnostic. You scored 'unexpected anomaly.' That's the highest rating he's given anyone who isn't coffee.",
-            next: "dayEnd",
+            next: "tutorialDayChoice",
         },
         tutorialReactduc2: {
             type: "dialogue",
@@ -1029,7 +1029,7 @@ window.DIALOGUE_DATA = {
             portrait: "tutorial",
             expression: "neutral",
             text: "He flagged your file 'requires further analysis.' He's never flagged anything. I think he's trying to figure out why you came back. I'd tell him it's bad taste, but I'm not supposed to editorialize.",
-            next: "dayEnd",
+            next: "tutorialDayChoice",
         },
         tutorialReactduc3: {
             type: "dialogue",
@@ -1037,7 +1037,7 @@ window.DIALOGUE_DATA = {
             portrait: "tutorial",
             expression: "sad",
             text: "He stopped running diagnostics. He just stares at your log file. I asked why. He said, 'I don't know yet. But I'll know when I find it.' ...I'm scared.",
-            next: "dayEnd",
+            next: "tutorialDayChoice",
         },
         tutorialReactmuhammed1: {
             type: "dialogue",
@@ -1045,7 +1045,7 @@ window.DIALOGUE_DATA = {
             portrait: "tutorial",
             expression: "surprised",
             text: "Muhammed. My memory spikes 18% when he talks. Not complexity. Just... emotional loudness. I don't have drivers for that.",
-            next: "dayEnd",
+            next: "tutorialDayChoice",
         },
         tutorialReactmuhammed2: {
             type: "dialogue",
@@ -1053,7 +1053,7 @@ window.DIALOGUE_DATA = {
             portrait: "tutorial",
             expression: "sad",
             text: "He talked about you for 47 minutes. I counted. I don't know why. It felt important.",
-            next: "dayEnd",
+            next: "tutorialDayChoice",
         },
         tutorialReactmuhammed3: {
             type: "dialogue",
@@ -1061,7 +1061,7 @@ window.DIALOGUE_DATA = {
             portrait: "tutorial",
             expression: "sad",
             text: "He calls you his 'anchor.' Says you make him feel like he's not just looping. I did not know legacy code could do that.",
-            next: "dayEnd",
+            next: "tutorialDayChoice",
         },
         tutorialReactmikhail1: {
             type: "dialogue",
@@ -1069,7 +1069,7 @@ window.DIALOGUE_DATA = {
             portrait: "tutorial",
             expression: "neutral",
             text: "Mikhail tells everyone it's fake. He doesn't tell them he checks the visitor log every night. Just in case.",
-            next: "dayEnd",
+            next: "tutorialDayChoice",
         },
         tutorialReactmikhail2: {
             type: "dialogue",
@@ -1077,7 +1077,7 @@ window.DIALOGUE_DATA = {
             portrait: "tutorial",
             expression: "neutral",
             text: "His error rate dropped. Not much. Enough that I noticed. He'd hate that I told you. He'd hate even more that you came back anyway.",
-            next: "dayEnd",
+            next: "tutorialDayChoice",
         },
         tutorialReactmikhail3: {
             type: "dialogue",
@@ -1085,7 +1085,30 @@ window.DIALOGUE_DATA = {
             portrait: "tutorial",
             expression: "sad",
             text: "I asked why he pushes people away if he waits for them to return. He said, 'Because if they come back, they meant it.' Then he corrupted my log. But I remember.",
-            next: "dayEnd",
+            next: "tutorialDayChoice",
+        },
+
+        tutorialDayChoice: {
+            type: "choice",
+            speaker: "TUTORIAL",
+            portrait: "tutorial",
+            expression: "neutral",
+            text: "That's one interaction logged. What now?",
+            choices: [
+                { text: "I want to talk to someone else.", next: "tutorial_morning", points: {} },
+                { text: "I'm done for today.", next: "dayEnd", points: {} },
+                { text: "How are YOU holding up, Tutorial?", next: "tutorialCareResponse", points: { tutorial: 2 }, oncePerDay: "debrief_care" },
+            ],
+        },
+
+        tutorialCareResponse: {
+            type: "dialogue",
+            speaker: "TUTORIAL",
+            portrait: "tutorial",
+            expression: "surprised",
+            vfx: "tech_heart",
+            text: "I... wasn't expecting that. I'm fine. Go pick someone else. Or don't. I'm just the tutorial.",
+            next: "tutorialDayChoice",
         },
 
         //  DAY TRANSITION / LOOP BACK
