@@ -25,7 +25,13 @@ Tutorial Sprite was custom made by Salima Hafurova via VRoid Studio.
 * [Sexy and Cute VFX](https://pipoya.itch.io/pipoya-sexy-and-cute-vfx) by [Pipoya](https://pipoya.itch.io/)
 
 ### Music Assets
-
+* [Moonlight Coffee](https://www.bensound.com/royalty-free-music/track/moonlight-coffee-shiny-lo-fi) by [Yunior Arronte](https://www.bensound.com/royalty-free-music/artist/yunior-arronte/4) via [Bensound](https://www.bensound.com)
+* [Keyboard Typing_Sound Effect](https://pixabay.com/sound-effects/film-special-effects-keyboard-typing-sound-effect-335503/) by [DRAGON-STUDIO](https://pixabay.com/users/dragon-studio-38165424/) via [Pixabay](https://pixabay.com/)
+* [The Elevator Bossa Nova](https://www.bensound.com/royalty-free-music/track/the-elevator-bossa-nova) by [Benjamin Tissot](https://www.bensound.com/royalty-free-music/artist/benjamin-tissot/0) via [Bensound](https://www.bensound.com)
+* [UI_Correct_button2](https://pixabay.com/sound-effects/film-special-effects-ui-correct-button2-103167/) by [ZenithInfinitiveStudios](https://pixabay.com/users/zenithinfinitivestudios-29215383/) via [Pixabay](https://pixabay.com/)
+* [Game Over](https://pixabay.com/sound-effects/musical-game-over-417465/) by [Alphix](https://pixabay.com/users/alphix-52619918/) via [Pixabay](https://pixabay.com/)
+* [Popup Show](https://pixabay.com/sound-effects/film-special-effects-popup-show-384945/) by [freesound_CrunchpixStudio](https://pixabay.com/users/freesound_crunchpixstudio-49769582/) via [Pixabay](https://pixabay.com/)
+* [orchestral win](https://pixabay.com/sound-effects/musical-orchestral-win-331233/) by [u_it78ck90s3](https://pixabay.com/users/u_it78ck90s3-49882174/) via [Pixabay](https://pixabay.com/)
 ---
 ##  Play the Game 
 You can play the live version of the game here:
