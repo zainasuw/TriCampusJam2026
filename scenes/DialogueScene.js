@@ -77,6 +77,7 @@ class DialogueScene {
         // sprites
         this.currentGuySprite = null;
         this.currentGirlSprite = null;
+        this._lastRemapped = null;
         this.breathTimer = 0;
         this.charOpacity = 0;
         this.playerOpacity = 0;
@@ -199,6 +200,8 @@ class DialogueScene {
         const match = nodeId.match(/^(duc|muhammed|mikhail)_day(\d+)_intro$/);
         if (!match) return nodeId;
         const who = match[1];
+        if (this._lastRemapped === nodeId) return `${who}_day${Math.min(GameState.visitCounts[who], 3)}_intro`;
+        this._lastRemapped = nodeId;
         GameState.visitCounts[who]++;
         let interactionNum = GameState.visitCounts[who];
         if (interactionNum > 3) interactionNum = 3;
