@@ -1,10 +1,10 @@
 // guys you can change any of these, if a sound is too loud/quiet, the sound range is from 0.0 to 1.0 :)
 const AUDIO_DEFAULTS = {
-    master:      0.15,   // master volume: slider starting position
-    music:       0.15,   // music track: this apply menu + game music
+    master:      0.20,   // master volume: slider starting position
+    music:       0.25,   // music track: this apply menu + game music
     sfx:         0.20,   // click + typing
     dialogueOn:  true,   // dialogue toggle this is reserved for future use currently unused by our dialogue system :)
-    musicOn:     true,
+    musicOn:     false,
 };
 
 // another setting i found is the if click SFX still feels sluggish it is probably frontpadding silence in the .mp3 itself
@@ -80,7 +80,7 @@ class AudioManager {
 
         if (this.audioCtx) {
             this.decodeInto("./assets/audio/click.mp3",  CLICK_TRIM_SECONDS,  b => this.clickBuffer  = b);
-            this.decodeInto("./assets/audio/keyboard.wav", TYPING_TRIM_SECONDS, b => this.typingBuffer = b);
+            this.decodeInto("./assets/audio/keyboard.mp3", TYPING_TRIM_SECONDS, b => this.typingBuffer = b);
         }
 
         // fallbackaudio for SFX in case Web Audio fails entirely
@@ -89,7 +89,7 @@ class AudioManager {
             this.fallbackClick.preload = "auto";
         } catch (e) { this.fallbackClick = null; }
         try {
-            this.fallbackTyping = new Audio("./assets/audio/keyboard.wav");
+            this.fallbackTyping = new Audio("./assets/audio/keyboard.mp3");
             this.fallbackTyping.preload = "auto";
             this.fallbackTyping.loop = true;
         } catch (e) { this.fallbackTyping = null; }
@@ -192,7 +192,7 @@ class AudioManager {
     }
 
     playWin() {
-        MUSIC.stopAllMusic();
+        this.stopAllMusic();
         if (this.winSound) {
             this.winSound.volume = this.masterVolume;
             this.winSound.currentTime = 0;
@@ -201,7 +201,7 @@ class AudioManager {
     }
 
     playLose() {
-        MUSIC.stopAllMusic();
+        this.stopAllMusic();
         if (this.loseSound) {
             this.loseSound.volume = this.masterVolume;
             this.loseSound.currentTime = 0;
@@ -295,6 +295,13 @@ class AudioManager {
             } catch (e) { /* we ignore, do nothing */ }
         }
     }
+
+    toggle() {
+        this.musicOn = !this.musicOn;
+        this.applyVolumes();
+        return this.musicOn;
+    }
+    stop() { this.stopAllMusic(); }
 }
 
 // expose as name existing scenes already import

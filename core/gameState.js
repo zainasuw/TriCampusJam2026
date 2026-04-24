@@ -1,5 +1,5 @@
 // global game state -- tracks relationship points, day count, who the player has met
-// 10 pts = 1 heart. 35 pts with a bachelor = DEFEAT, 18 pts with Tutorial = VICTORY
+// 10 pts = 1 heart. 30 pts with a bachelor = DEFEAT, 12 pts with Tutorial = VICTORY
 
 const GameState = {
     playerName: "UNKNOWN",
@@ -27,6 +27,7 @@ const GameState = {
     },
     // who did the player visit today? prevents picking the same bachelor twice in one day
     visitedToday: null,
+    visitedTodayList: [],
     lockedBachelor: null,
     memories: [],
 
@@ -38,9 +39,9 @@ const GameState = {
     // thresholds
     HEART_VALUE: 10,
     MAX_HEARTS: 5,
-    BACHELOR_MAX_POINTS: 35,   // 3.5 hearts = defeat
-    TUTORIAL_WIN_POINTS: 18,   // gotta work for it across all 3 days
-    CHAOS_THRESHOLD: 15,       // high chaos unlocks TRANSCEND ending
+    BACHELOR_MAX_POINTS: 30,
+    TUTORIAL_WIN_POINTS: 12,
+    CHAOS_THRESHOLD: 8,
 
     // Helpers
     addPoints(character, amount) {

@@ -4,8 +4,8 @@ class GlitchIntroScene {
         this.removeFromWorld = false;
         this.timer = 0;
         this.phase = "cute";
-        this.glitchStart = 8.0;
-        this.glitchEnd = 10.2;
+        this.glitchStart = 5.0;
+        this.glitchEnd = 6.5;
         this.barY = [];
         for (var i = 0; i < 25; i++) {
             this.barY.push(Math.random() * 1080);
@@ -147,6 +147,11 @@ class GlitchIntroScene {
         ctx.textAlign = "center";
         ctx.fillStyle = "rgba(160, 64, 112, 0.5)";
         ctx.fillText("v3.1.4  \u00b7  \u00a9 2026 PerfectMatch Inc.  \u00b7  All rights reserved", W / 2, H - 40);
+
+        if (t > 2 && this.phase === "cute") {
+            ctx.fillStyle = "rgba(160,64,112,0.35)";
+            ctx.fillText("click anywhere to skip", W/2, H - 70);
+        }
 
         if (this.phase === "glitching") {
             var gp = Math.min(1, (t - this.glitchStart) / (this.glitchEnd - this.glitchStart));

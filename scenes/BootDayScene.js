@@ -11,7 +11,7 @@ class BootDayScene {
         this.fadingIn = true;
         this.phase = "typing";
         this.holdTimer = 0;
-        this.holdDuration = 1.2;
+        this.holdDuration = 0.6;
         this.fadeOut = 0;
 
         const chaos = GameState.chaosPoints;
@@ -21,7 +21,7 @@ class BootDayScene {
         this.paragraphs = [
             bsod.header,
             "",
-            "DAY_COUNTER_INCREMENT",
+            "INCREMENTING DAY COUNTER... " + (GameState.currentDay - 1) + " -> " + GameState.currentDay,
             "",
             bsod.detail,
             "",
@@ -34,7 +34,7 @@ class BootDayScene {
 
         this.fullText = this.paragraphs.join("\n");
         this.typedChars = 0;
-        this.charsPerSec = 220;
+        this.charsPerSec = 350;
         this.typingAccum = 0;
 
         this.BG_COLOR   = "#d4789a";
