@@ -40,7 +40,32 @@ class HomeScreen {
         // Debug Menu Variables
         this.debugMenuOpen = false;
 
+        this.keyHandler = (e) => this.onKey(e);
+        document.addEventListener("keydown", this.keyHandler);
+
         MUSIC.playMenuMusic();
+    }
+
+    onKey(e) {
+        if (this.state !== "idle" || this.transitionAlpha > 0) return;
+        
+        let hasOverlay = false;
+        for (const entity of this.game.entities) {
+            if (entity instanceof SettingsScene && !entity.removeFromWorld) {
+                hasOverlay = true;
+                break;
+            }
+        }
+        if (hasOverlay) return;
+
+        if (e.key === "s" || e.key === "S") {
+            MUSIC.unlock();
+            this.gearPressed = true;
+            setTimeout(function() {
+                this.gearPressed = false;
+            }.bind(this), 120);
+            this.game.addEntity(new SettingsScene(this.game, this));
+        }
     }
 
     isHit(mx, my) {

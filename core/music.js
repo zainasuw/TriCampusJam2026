@@ -1,7 +1,7 @@
 // guys you can change any of these, if a sound is too loud/quiet, the sound range is from 0.0 to 1.0 :)
 const AUDIO_DEFAULTS = {
-    master:      0.65,   // master volume: slider starting position
-    music:       0.55,   // music track: this apply menu + game music
+    master:      0.20,   // master volume: slider starting position
+    music:       0.20,   // music track: this apply menu + game music
     sfx:         0.20,   // click + typing
     dialogueOn:  true,   // dialogue toggle this is reserved for future use currently unused by our dialogue system :)
     musicOn:     true,

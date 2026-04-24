@@ -158,10 +158,12 @@ class DialogueScene {
 
         if (e.key === "i" || e.key === "I") {
             this.paused = true;
+            MUSIC.stopTyping();
             this.game.addEntity(new CharacterSheetScene(this.game, this));
         } else if (e.key === "s" || e.key === "S") {
             // quick keyboard shortcut to open Settings
             this.paused = true;
+            MUSIC.stopTyping();
             this.game.addEntity(new SettingsScene(this.game, this));
         }
     }
@@ -431,7 +433,11 @@ class DialogueScene {
                     break;
                 }
             }
-            if (!hasOverlay) this.paused = false;
+            if (!hasOverlay) {
+                this.paused = false;
+                if (this.phase === "typing") MUSIC.startDialogueTyping();
+                else if (this.phase === "system") MUSIC.startTyping();
+            }
             else return;
         }
 
@@ -491,6 +497,7 @@ class DialogueScene {
 
         if (click && this.phase !== "system" && this.phase !== "system_pause" && this.gearHit(click)) {
             this.paused = true;
+            MUSIC.stopTyping();
             this.game.addEntity(new SettingsScene(this.game, this));
             this.game.click = null;
             return;
@@ -1210,3 +1217,4 @@ class DialogueScene {
         }
     }
 }
+
