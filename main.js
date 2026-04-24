@@ -99,6 +99,23 @@ ASSET_MANAGER.queueDownload("./assets/vfx/heart_pulse.png");
 ASSET_MANAGER.queueDownload("./assets/vfx/heart_form.png");
 ASSET_MANAGER.queueDownload("./assets/vfx/pink_burst.png");
 
+ASSET_MANAGER.queueDownload("./assets/vfx/sparkle_explosion.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/sparkle_scatter.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/heart_cloud.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/heart_glow.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/winged_heart.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/crystal_heart.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/heart_rings.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/tech_heart.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/heart_bubbles.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/slot_lose.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/hearts_merge.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/heart_shift.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/heart_dream.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/heart_gather.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/pink_vortex.png");
+ASSET_MANAGER.queueDownload("./assets/vfx/heart_wobble.png");
+
 ASSET_MANAGER.downloadAll(() => {
 	const canvas = document.getElementById("gameWorld");
 	const ctx = canvas.getContext("2d");
