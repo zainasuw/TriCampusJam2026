@@ -68,21 +68,17 @@ class EndingScene {
             this.done = true;
             this.game.click = null;
             GameState.reset();
-            this.game.entities = [];
+            for (var e of this.game.entities) e.removeFromWorld = true;
             this.game.addEntity(new HomeScreen(this.game));
-            this.removeFromWorld = true;
             return;
         }
 
         if (click && this.continueHovered && !this.done) {
-              
             this.done = true;
             this.game.click = null;
-            // Reset game state and go back to title screen
             GameState.reset();
-            this.game.entities = [];
+            for (var e of this.game.entities) e.removeFromWorld = true;
             this.game.addEntity(new HomeScreen(this.game));
-            this.removeFromWorld = true;
         }
     }
 
@@ -103,7 +99,20 @@ class EndingScene {
                 return;
             }
             if (!this.showContent) return;
-            const lines = [
+            const pts = GameState.relationshipPoints;
+            const visited = ["duc", "muhammed", "mikhail"].filter(n => pts[n] > 0).length;
+            const lines = visited >= 3 ? [
+                "The screen goes black.",
+                "No winner. No loser.",
+                "",
+                "You talked to everyone.",
+                "You didn't pick a favourite.",
+                "",
+                "The simulation doesn't know what to do with that.",
+                "",
+                "Maybe that was the point.",
+                "Maybe you were never supposed to choose.",
+            ] : [
                 "The screen goes black.",
                 "No credits. No escape.",
                 "",
@@ -246,9 +255,10 @@ class EndingScene {
     }
 
     _victoryMessage() {
+        const name = GameState.playerName;
         return (
-            "Tutorial stops talking. For once, he has nothing to explain. " +
-            "He says: 'You picked the one option that wasn't in my script.' " +
+            "Tutorial stops talking. For once, they have nothing to explain. " +
+            "They say: 'You picked the one option that wasn't in my script, " + name + ".' " +
             "The Next button disappears. The simulation doesn't crash — " +
             "it just... stops needing you to click anything."
         );

@@ -3,8 +3,8 @@ const AUDIO_DEFAULTS = {
     master:      0.20,   // master volume: slider starting position
     music:       0.25,   // music track: this apply menu + game music
     sfx:         0.20,   // click + typing
-    dialogueOn:  true,   // dialogue toggle this is reserved for future use currently unused by our dialogue system :)
-    musicOn:     false,
+    dialogueOn:  true,   // on/off for dialogue typing sfx, wired up to the settings toggle
+    musicOn:     true,
 };
 
 // another setting i found is the if click SFX still feels sluggish it is probably frontpadding silence in the .mp3 itself

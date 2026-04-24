@@ -193,15 +193,6 @@ class CharacterSheetScene {
 
         ctx.restore();
     }
-    drawPanel(ctx, r) {
-        var bgImg = (r === this.LEFT)
-            ? ASSET_MANAGER.getAsset("./assets/DatingGameUI/CharacterScreen/CharacterSheetBackground.png")
-            : ASSET_MANAGER.getAsset("./assets/DatingGameUI/CharacterScreen/CharacterDetailsBackground.png");
-        if (bgImg) {
-            ctx.drawImage(bgImg, r.x, r.y, r.w, r.h);
-        }
-    }
-
     drawSlot(ctx, index) {
         const r = this.slotRect(index);
         const key = this.SLOT_KEYS[index];
