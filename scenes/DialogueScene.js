@@ -1,7 +1,7 @@
 const FACE_Y_OFFSET = -22;          // negative pulls the face up into the container. tweak til it looks centered
 const FACE_X_OFFSET = 0;            // positive shifts right
 const PLAYER_FACE_Y_OFFSET = -22;
-const CHAR_SLIDE_DURATION = 0.55;   // lerp time for ENTERING and EXITING in seconds, speed or slow down
+const CHAR_SLIDE_DURATION = 0.35;   // lerp time for ENTERING and EXITING in seconds, speed or slow down
 const CHAR_OFFSCREEN_X = 1300;      // pixels past right edge where characters spawn
 const NEXT_ARROW_Y = 855;           // moved up from 890 so it doesnt overlap the dialogue box
 
@@ -47,7 +47,7 @@ class DialogueScene {
         this.fullText = "";
         this.charIndex = 0;
         this.typingTimer = 0;
-        this.typingSpeed = 0.025;
+        this.typingSpeed = 0.018;
 
         // dialogue state
         // phases typing,idle,choice,system,system_pause,end
@@ -127,15 +127,35 @@ class DialogueScene {
 
         // vfx sprite sheet definitions
         this.VFX_DEFS = {
-            hearts_rising: {asset: "./assets/vfx/hearts_rising.png", cols: 5, rows: 4, total: 20, fps: 15},
-            heart_crumble: {asset: "./assets/vfx/heart_crumble.png", cols: 5, rows: 3, total: 15, fps: 15},
-            analysis_error: {asset: "./assets/vfx/analysis_error.png", cols: 5, rows: 3, total: 15, fps: 15},
-            hearts_sparkle: {asset: "./assets/vfx/hearts_sparkle.png", cols: 5, rows: 2, total: 10, fps: 15},
-            touch_effect: {asset: "./assets/vfx/touch_effect.png", cols: 5, rows: 3, total: 15, fps: 15},
-            heart_pulse: {asset: "./assets/vfx/heart_pulse.png", cols: 5, rows: 4, total: 20, fps: 15},
-            heart_form: {asset: "./assets/vfx/heart_form.png", cols: 5, rows: 5, total: 25, fps: 15},
-            pink_burst: {asset: "./assets/vfx/pink_burst.png", cols: 5, rows: 3, total: 15, fps: 15},
+            hearts_rising:   {asset: "./assets/vfx/hearts_rising.png",   cols: 5, rows: 4, total: 20, fps: 15},
+            heart_crumble:   {asset: "./assets/vfx/heart_crumble.png",   cols: 5, rows: 3, total: 15, fps: 15},
+            analysis_error:  {asset: "./assets/vfx/analysis_error.png",  cols: 5, rows: 3, total: 15, fps: 15},
+            hearts_sparkle:  {asset: "./assets/vfx/hearts_sparkle.png",  cols: 5, rows: 2, total: 10, fps: 15},
+            touch_effect:    {asset: "./assets/vfx/touch_effect.png",    cols: 5, rows: 3, total: 15, fps: 15},
+            heart_pulse:     {asset: "./assets/vfx/heart_pulse.png",     cols: 5, rows: 4, total: 20, fps: 15},
+            heart_form:      {asset: "./assets/vfx/heart_form.png",      cols: 5, rows: 5, total: 25, fps: 15},
+            pink_burst:      {asset: "./assets/vfx/pink_burst.png",      cols: 5, rows: 3, total: 15, fps: 15},
             distorted_heart: {asset: "./assets/vfx/distorted_heart.png", cols: 5, rows: 4, total: 20, fps: 15},
+            burning_heart:   {asset: "./assets/vfx/burning_heart.png",   cols: 5, rows: 4, total: 20, fps: 12},
+            frozen_heart:    {asset: "./assets/vfx/frozen_heart.png",    cols: 5, rows: 4, total: 20, fps: 12},
+            heart_explosion: {asset: "./assets/vfx/heart_explosion.png", cols: 5, rows: 4, total: 20, fps: 15},
+            heart_fireworks: {asset: "./assets/vfx/heart_fireworks.png", cols: 5, rows: 4, total: 20, fps: 12},
+            sparkle_explosion: {asset: "./assets/vfx/sparkle_explosion.png", cols: 5, rows: 3, total: 15, fps: 12},
+            sparkle_scatter:   {asset: "./assets/vfx/sparkle_scatter.png",   cols: 5, rows: 3, total: 15, fps: 12},
+            heart_cloud:       {asset: "./assets/vfx/heart_cloud.png",       cols: 5, rows: 3, total: 15, fps: 10},
+            heart_glow:        {asset: "./assets/vfx/heart_glow.png",        cols: 5, rows: 4, total: 20, fps: 10},
+            winged_heart:      {asset: "./assets/vfx/winged_heart.png",      cols: 5, rows: 4, total: 20, fps: 10},
+            crystal_heart:     {asset: "./assets/vfx/crystal_heart.png",     cols: 5, rows: 5, total: 25, fps: 12},
+            heart_rings:       {asset: "./assets/vfx/heart_rings.png",       cols: 5, rows: 3, total: 15, fps: 10},
+            tech_heart:        {asset: "./assets/vfx/tech_heart.png",        cols: 5, rows: 4, total: 20, fps: 10},
+            heart_bubbles:     {asset: "./assets/vfx/heart_bubbles.png",     cols: 5, rows: 5, total: 25, fps: 10},
+            slot_lose:         {asset: "./assets/vfx/slot_lose.png",         cols: 5, rows: 5, total: 25, fps: 10},
+            hearts_merge:      {asset: "./assets/vfx/hearts_merge.png",      cols: 5, rows: 2, total: 10, fps: 10},
+            heart_shift:       {asset: "./assets/vfx/heart_shift.png",       cols: 5, rows: 5, total: 25, fps: 10},
+            heart_dream:       {asset: "./assets/vfx/heart_dream.png",       cols: 5, rows: 3, total: 15, fps: 10},
+            heart_gather:      {asset: "./assets/vfx/heart_gather.png",      cols: 5, rows: 3, total: 15, fps: 12},
+            pink_vortex:       {asset: "./assets/vfx/pink_vortex.png",       cols: 5, rows: 3, total: 15, fps: 12},
+            heart_wobble:      {asset: "./assets/vfx/heart_wobble.png",      cols: 5, rows: 2, total: 10, fps: 10},
         };
         this.activeVFX = [];
 
@@ -178,13 +198,8 @@ class DialogueScene {
         const match = nodeId.match(/^(duc|muhammed|mikhail)_day(\d+)_intro$/);
         if (!match) return nodeId;
         const who = match[1];
-
-        // first time meeting check if they haven't been met, this is their intro regardless of day
-        if (!GameState.metCharacters[who]) {
-            GameState.visitCounts[who]++;
-            return `${who}_day1_intro`;
-        }
-
+        if (this._lastRemapped === nodeId) return `${who}_day${Math.min(GameState.visitCounts[who], 3)}_intro`;
+        this._lastRemapped = nodeId;
         GameState.visitCounts[who]++;
         let interactionNum = GameState.visitCounts[who];
         if (interactionNum > 3) interactionNum = 3;
@@ -224,6 +239,9 @@ class DialogueScene {
             this.phase = "end";
             return;
         }
+
+        // play vfx if one is set on this node
+        if (node.vfx) this.playVFX(node.vfx, 960, 400, 3);
 
         // figure out the new portrait, portrait controls which sprite is on screen (tutorial,duc, muhammed, mikhail)
         // so we key entrance/exit off of THAT not off speaker name tutorial's first node uses speaker "???" but
@@ -664,22 +682,17 @@ class DialogueScene {
                         if (choice.memory) GameState.addMemory(choice.memory);
                         if (choice.chaos) GameState.addChaos(choice.chaos, choice.text);
 
-                        // reaction VFX based on the size and sign of the point change
+                        // auto VFX on big point changes
                         if (choice.points && !flagBlocks) {
                             let total = 0;
                             for (const k2 in choice.points) total += choice.points[k2];
 
-                            const offsetX = (Math.random() - 0.5) * 200;
-                            const offsetY = (Math.random() - 0.5) * 120;
-
-                            if (choice.chaos) {
-                                this.playVFX("analysis_error", 960 + offsetX, 380 + offsetY, 3);
-                            } else if (total >= 8) {
-                                this.playVFX("heart_pulse", 960 + offsetX, 380 + offsetY, 3);
-                            } else if (total > 0) {
-                                this.playVFX("heart_form", 960 + offsetX, 380 + offsetY, 3);
-                            } else if (total < 0) {
-                                this.playVFX("distorted_heart", 960 + offsetX, 380 + offsetY, 3);
+                            if (total >= 14) {
+                                this.playVFX("sparkle_explosion", 960, 380, 2);
+                            } else if (total >= 10) {
+                                this.playVFX("heart_glow", 960, 380, 2);
+                            } else if (total <= -5) {
+                                this.playVFX("heart_crumble", 960, 380, 2);
                             }
                         }
 
@@ -913,9 +926,8 @@ class DialogueScene {
         let guyTalking = false;
         if (this.currentSpeaker && !isChoice) guyTalking = true;
 
-        const girlScale = 0.85;
-        // girl stays at her fixed resting position regardless of phase
-        const girlX = -W * 0.28;
+        const girlScale = 1.3;
+        const girlX = -W * 0.32;
         const girlY = H * (1 - girlScale);
 
         // guy stays at a fixed base position regardless of who is talking or whether
@@ -931,7 +943,7 @@ class DialogueScene {
             if (!girlImg) return;
             ctx.save();
             ctx.globalAlpha = this.playerOpacity;
-            ctx.drawImage(girlImg, girlX, girlY + breathY, W * girlScale, H * girlScale);
+            ctx.drawImage(girlImg, girlX, girlY, W * girlScale, H * girlScale);
             ctx.restore();
         };
 
