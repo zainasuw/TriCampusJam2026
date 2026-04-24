@@ -55,6 +55,9 @@ ASSET_MANAGER.queueDownload("./assets/DatingGameUI/VictoryOrDefeat/BlueBtn.png")
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/VictoryOrDefeat/BlueBtnPressed.png");
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/VictoryOrDefeat/RedBtn.png");
 ASSET_MANAGER.queueDownload("./assets/DatingGameUI/VictoryOrDefeat/RedBtnPressed.png");
+ASSET_MANAGER.queueDownload("./assets/DatingGameUI/LoadingBarEmpty.png");
+ASSET_MANAGER.queueDownload("./assets/DatingGameUI/LoadingBarFull.png");
+ASSET_MANAGER.queueDownload("./assets/DatingGameUI/LoadingHeart.png");
 
 
 const GUY_EXPRESSIONS = ["Neutral", "Angry", "Sad", "Surprised", "Relaxed", "Blink"];
@@ -116,10 +119,46 @@ ASSET_MANAGER.queueDownload("./assets/vfx/heart_gather.png");
 ASSET_MANAGER.queueDownload("./assets/vfx/pink_vortex.png");
 ASSET_MANAGER.queueDownload("./assets/vfx/heart_wobble.png");
 
+var canvas = document.getElementById("gameWorld");
+var ctx = canvas.getContext("2d");
+
+var realPct = 0;
+var displayPct = 0;
+var loadStartTime = Date.now();
+var MIN_LOAD_MS = 4000;
+
+function drawLoading(loaded, total) {
+    realPct = total > 0 ? loaded/total : 0;
+}
+
+function loadingLoop() {
+    if (displayPct < realPct) displayPct = Math.min(realPct, displayPct + 0.005);
+
+    var W = 1920, H = 1080;
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.fillStyle = "#e0d0f8";
+    ctx.font = "32px 'Lucida Console', 'Consolas', 'Courier New', monospace";
+    ctx.fillText("Initializing simulation...", 90, 140);
+    ctx.fillText("Loading assets: " + Math.floor(displayPct * 100) + "%", 90, 200);
+
+    var dotCount = Math.floor(Date.now() / 400) % 4;
+    var dots = "";
+    for (var d = 0; d < dotCount; d++) dots += ".";
+    ctx.fillText("Please wait" + dots, 90, 258);
+
+    var elapsed = Date.now() - loadStartTime;
+    if (displayPct < 1 || elapsed < MIN_LOAD_MS) requestAnimationFrame(loadingLoop);
+}
+requestAnimationFrame(loadingLoop);
+
 ASSET_MANAGER.downloadAll(() => {
-	const canvas = document.getElementById("gameWorld");
-	const ctx = canvas.getContext("2d");
-	gameEngine.init(ctx);
-	gameEngine.addEntity(new HomeScreen(gameEngine));
-	gameEngine.start();
-});
+	setTimeout(() => {
+		gameEngine.init(ctx);
+		gameEngine.addEntity(new HomeScreen(gameEngine));
+		gameEngine.start();
+	}, 3000);
+}, drawLoading);

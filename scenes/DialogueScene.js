@@ -89,6 +89,7 @@ class DialogueScene {
         this.tutorialBlinkTimer = 0;
         this.tutorialNextBlinkIn = this.rollNextBlinkDelay();
 
+
         // character entrance state machine
         this.charPhase = CHAR_PHASE_OFF;
         this.charLerpT = 0;
@@ -198,8 +199,6 @@ class DialogueScene {
         const match = nodeId.match(/^(duc|muhammed|mikhail)_day(\d+)_intro$/);
         if (!match) return nodeId;
         const who = match[1];
-        if (this._lastRemapped === nodeId) return `${who}_day${Math.min(GameState.visitCounts[who], 3)}_intro`;
-        this._lastRemapped = nodeId;
         GameState.visitCounts[who]++;
         let interactionNum = GameState.visitCounts[who];
         if (interactionNum > 3) interactionNum = 3;
@@ -226,6 +225,16 @@ class DialogueScene {
             GameState.visitedTodayList.length >= 3) {
             this.loadNode("dayEnd");
             return;
+        }
+        if (nodeId === "tutorial_morning" && GameState.currentDay >= 3) {
+            nodeId = GameState.isHighChaos() ? "tutorial_morning_day3_chaos" : "tutorial_morning_day3";
+        }
+        if (nodeId === "tutorialDayChoice" && GameState.visitedTodayList &&
+            GameState.visitedTodayList.length >= 2) {
+            nodeId = "tutorialDayChoiceLast";
+        }
+        if (nodeId === "tutorialDayChoice" && GameState.isHighChaos()) {
+            nodeId = "tutorialDayChoiceHighChaos";
         }
 
         if (nodeId === "dayEnd") {
@@ -667,7 +676,7 @@ class DialogueScene {
                         if (dayFlag) GameState.setFlag(dayFlag, "day");
                         if (choice.visit) {
                             if (GameState.visitedTodayList && GameState.visitedTodayList.includes(choice.visit)) {
-                                this.loadNode("tutorial_morning");
+                                this.loadNode("already_visited");
                                 return;
                             }
                             // ability to visit all three bachelors in one day but prevent from visiting
@@ -926,8 +935,8 @@ class DialogueScene {
         let guyTalking = false;
         if (this.currentSpeaker && !isChoice) guyTalking = true;
 
-        const girlScale = 1.3;
-        const girlX = -W * 0.32;
+        const girlScale = 0.85;
+        const girlX = -W * 0.28;
         const girlY = H * (1 - girlScale);
 
         // guy stays at a fixed base position regardless of who is talking or whether
@@ -935,7 +944,7 @@ class DialogueScene {
         const guyBaseX = W * 0.28;
         const guyX = guyBaseX + this.charCurrentX;
 
-        const guyScale = 1.45;
+        const guyScale = 1.8;
 
         const drawGirl = () => {
             let girlImg = this.currentGirlSprite;
@@ -943,7 +952,7 @@ class DialogueScene {
             if (!girlImg) return;
             ctx.save();
             ctx.globalAlpha = this.playerOpacity;
-            ctx.drawImage(girlImg, girlX, girlY, W * girlScale, H * girlScale);
+            ctx.drawImage(girlImg, girlX, girlY + breathY, W * girlScale, H * girlScale);
             ctx.restore();
         };
 
@@ -1048,7 +1057,7 @@ class DialogueScene {
 
         // tutorial occasionally glitches a character of his name. very low chance per frame
         let nameDisplay = this.currentSpeaker;
-        if (this.currentSpeaker === "TUTORIAL" && Math.random() < 0.018) {
+        if (this.currentSpeaker === "TUTORIAL" && Math.random() < 0.005) {
             const glyphs = "!@#$%^&*<>?/|{}~`";
             const idx = Math.floor(Math.random() * nameDisplay.length);
             nameDisplay = nameDisplay.slice(0, idx) +
@@ -1167,6 +1176,7 @@ class DialogueScene {
         ctx.font = "bold 24px 'The Bold Font', serif";
         ctx.fillStyle = "#4a2a58";
         ctx.fillText(`DAY ${GameState.currentDay}  ·  Press I`, 1920 - 340 + 156, 60);
+
     }
 
     drawGearButton(ctx) {

@@ -15,9 +15,10 @@ class AssetManager {
         return this.downloadQueue.length === this.successCount + this.errorCount;
     };
 
-    downloadAll(callback) {
-        if (this.downloadQueue.length === 0) setTimeout(callback, 10);
-        for (let i = 0; i < this.downloadQueue.length; i++) {
+    downloadAll(callback, onProgress) {
+        var total = this.downloadQueue.length;
+        if (total === 0) { setTimeout(callback, 10); return; }
+        for (let i = 0; i < total; i++) {
             const img = new Image();
 
             const path = this.downloadQueue[i];
@@ -26,12 +27,14 @@ class AssetManager {
             img.addEventListener("load", () => {
                 console.log("Loaded " + img.src);
                 this.successCount++;
+                if (onProgress) onProgress(this.successCount + this.errorCount, total);
                 if (this.isDone()) callback();
             });
 
             img.addEventListener("error", () => {
                 console.log("Error loading " + img.src);
                 this.errorCount++;
+                if (onProgress) onProgress(this.successCount + this.errorCount, total);
                 if (this.isDone()) callback();
             });
 

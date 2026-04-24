@@ -102,8 +102,8 @@ class GlitchIntroScene {
         for (var d = 0; d < dotCount; d++) loadText += ".";
         ctx.fillText(loadText, W / 2, 570);
 
-       var barEmpty = ASSET_MANAGER.getAsset("./assets/DatingGameUI/Settings/VolumeBarEmpty.png");
-       var barFill = ASSET_MANAGER.getAsset("./assets/DatingGameUI/Settings/VolumeFill.png");
+       var barEmpty = ASSET_MANAGER.getAsset("./assets/DatingGameUI/LoadingBarEmpty.png");
+       var barFill = ASSET_MANAGER.getAsset("./assets/DatingGameUI/LoadingBarFull.png");
        var barW = 460;
        var barH = 30;
        var barX = W/2 -barW/2;
@@ -149,7 +149,7 @@ class GlitchIntroScene {
         ctx.fillText("v3.1.4  \u00b7  \u00a9 2026 PerfectMatch Inc.  \u00b7  All rights reserved", W / 2, H - 40);
 
         if (t > 2 && this.phase === "cute") {
-            ctx.fillStyle = "rgba(160,64,112,0.35)";
+            ctx.fillStyle = "rgba(160,64,112,0.6)";
             ctx.fillText("click anywhere to skip", W/2, H - 70);
         }
 

@@ -47,8 +47,8 @@ class NameInputScene {
         this.postTypeDelay = 0.35;
 
         // BSOD styling constants (classic NT 4.0 / XP palette)
-        this.BG_COLOR   = "#f7c5d5";   // iconic BSOD pink
-        this.FG_COLOR   = "#3d1a2e";
+        this.BG_COLOR   = "#000000";
+        this.FG_COLOR   = "#e0d0f8";
         this.FONT_BODY  = "32px 'Lucida Console', 'Consolas', 'Courier New', monospace";
         this.FONT_HEAD  = "bold 34px 'Lucida Console', 'Consolas', 'Courier New', monospace";
 

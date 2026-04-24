@@ -95,41 +95,41 @@ class HomeScreen {
         const mouse = this.game.mouse;
         const click = this.game.click;
 
-        // Process clicks for the debug menu first
-        if (click) {
-            let cx = click.x;
-            let cy = click.y;
-
-            // placing the toggle checkbox in the top right corner
-            let toggleX = this.W - 80;
-            let toggleY = 20;
-
-            if (cx >= toggleX && cx <= toggleX + 40 && cy >= toggleY && cy <= toggleY + 40) {
-                if (this.debugMenuOpen) {
-                    this.debugMenuOpen = false;
-                } else {
-                    this.debugMenuOpen = true;
-                }
-                this.game.click = null;
-                return;
-            }
-
-            // Options click hit boxes on the sticky note
-            if (this.debugMenuOpen) {
-                let noteX = this.W - 480;
-                let noteY = 80;
-
-                // looping through the 8 options
-                for (let i = 0; i < 8; i++) {
-                    let optY = noteY + 100 + (i * 35);
-                    if (cx >= noteX + 20 && cx <= noteX + 400 && cy >= optY - 20 && cy <= optY + 10) {
-                        this.applyDebugOption(i);
-                        this.game.click = null;
-                        return;
-                    }
-                }
-            }
-        }
+        // // Process clicks for the debug menu first
+        // if (click) {
+        // let cx = click.x;
+        // let cy = click.y;
+        // 
+        // // placing the toggle checkbox in the top right corner
+        // let toggleX = this.W - 80;
+        // let toggleY = 20;
+        // 
+        // if (cx >= toggleX && cx <= toggleX + 40 && cy >= toggleY && cy <= toggleY + 40) {
+        // if (this.debugMenuOpen) {
+        // this.debugMenuOpen = false;
+        // } else {
+        // this.debugMenuOpen = true;
+        // }
+        // this.game.click = null;
+        // return;
+        // }
+        // 
+        // // Options click hit boxes on the sticky note
+        // if (this.debugMenuOpen) {
+        // let noteX = this.W - 480;
+        // let noteY = 80;
+        // 
+        // // looping through the 8 options
+        // for (let i = 0; i < 8; i++) {
+        // let optY = noteY + 100 + (i * 35);
+        // if (cx >= noteX + 20 && cx <= noteX + 400 && cy >= optY - 20 && cy <= optY + 10) {
+        // this.applyDebugOption(i);
+        // this.game.click = null;
+        // return;
+        // }
+        // }
+        // }
+        // }
 
         if (this.state === "idle") {
             if (mouse) {
@@ -291,7 +291,7 @@ class HomeScreen {
         }
 
         this.drawGearButton(ctx);
-        this.drawDebugMenu(ctx);
+        // this.drawDebugMenu(ctx);
 
         ctx.restore();
     }

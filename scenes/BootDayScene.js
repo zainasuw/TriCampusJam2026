@@ -25,6 +25,8 @@ class BootDayScene {
             "",
             bsod.detail,
             "",
+            GameState.currentDay >= 3 ? "WARNING: FINAL DAY. This instance will not advance further." : "",
+            "",
             "Technical information:",
             "",
             bsod.stopCode,
@@ -37,8 +39,8 @@ class BootDayScene {
         this.charsPerSec = 350;
         this.typingAccum = 0;
 
-        this.BG_COLOR   = "#d4789a";
-        this.FG_COLOR   = "#3d1a2e";
+        this.BG_COLOR   = "#000000";
+        this.FG_COLOR   = "#e0d0f8";
 
         // hearts show up and die if ur getting too close to a bachelor
         var maxPts = Math.max(
