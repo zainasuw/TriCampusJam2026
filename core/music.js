@@ -1,7 +1,7 @@
 // guys you can change any of these, if a sound is too loud/quiet, the sound range is from 0.0 to 1.0 :)
 const AUDIO_DEFAULTS = {
-    master:      0.20,   // master volume: slider starting position
-    music:       0.20,   // music track: this apply menu + game music
+    master:      0.15,   // master volume: slider starting position
+    music:       0.15,   // music track: this apply menu + game music
     sfx:         0.20,   // click + typing
     dialogueOn:  true,   // dialogue toggle this is reserved for future use currently unused by our dialogue system :)
     musicOn:     true,
@@ -29,18 +29,18 @@ class AudioManager {
         this.typingBuffer   = null;
         this.typingLoopNode = null;
 
-        this._loadMusic();
-        this._loadSfx();
+        this.loadMusic();
+        this.loadSfx();
     }
 
 
-    _loadMusic() {
+    loadMusic() {
         // menu music
         try {
             this.menuMusic = new Audio("./assets/audio/bensound-moonlightcoffee.mp3");
             this.menuMusic.preload = "auto";
             this.menuMusic.loop = true;
-            this.menuMusic.volume = this._computedMusicVol();
+            this.menuMusic.volume = this.computedMusicVol();
         } catch (e) {
             console.log("Menu music failed to load:", e);
             this.menuMusic = null;
@@ -50,7 +50,7 @@ class AudioManager {
             this.gameMusic = new Audio("./assets/audio/background.mp3");
             this.gameMusic.preload = "auto";
             this.gameMusic.loop = true;
-            this.gameMusic.volume = this._computedMusicVol();
+            this.gameMusic.volume = this.computedMusicVol();
         } catch (e) {
             console.log("Game music failed to load:", e);
             this.gameMusic = null;
@@ -66,9 +66,12 @@ class AudioManager {
         } catch (e) { this.loseSound = null; }
     }
 
-    _loadSfx() {
+    loadSfx() {
+        // webkitAudioContext is the old safari/iOS name. intellij complains its unresolved, but we need it for fallback.
+        // using bracket lookup so the IDE stops yelling
         try {
-            const Ctx = window.AudioContext || window.webkitAudioContext;
+            let Ctx = window.AudioContext;
+            if (!Ctx) Ctx = window["webkitAudioContext"];
             this.audioCtx = new Ctx();
         } catch (e) {
             console.log("Web Audio unavailable; falling back to <audio> for SFX");
@@ -76,27 +79,27 @@ class AudioManager {
         }
 
         if (this.audioCtx) {
-            this._decodeInto("./assets/audio/click.mp3",  CLICK_TRIM_SECONDS,  b => this.clickBuffer  = b);
-            this._decodeInto("./assets/audio/keyboard.wav", TYPING_TRIM_SECONDS, b => this.typingBuffer = b);
+            this.decodeInto("./assets/audio/click.mp3",  CLICK_TRIM_SECONDS,  b => this.clickBuffer  = b);
+            this.decodeInto("./assets/audio/keyboard.wav", TYPING_TRIM_SECONDS, b => this.typingBuffer = b);
         }
 
         // fallbackaudio for SFX in case Web Audio fails entirely
         try {
-            this._fallbackClick = new Audio("./assets/audio/click.mp3");
-            this._fallbackClick.preload = "auto";
-        } catch (e) { this._fallbackClick = null; }
+            this.fallbackClick = new Audio("./assets/audio/click.mp3");
+            this.fallbackClick.preload = "auto";
+        } catch (e) { this.fallbackClick = null; }
         try {
-            this._fallbackTyping = new Audio("./assets/audio/keyboard.wav");
-            this._fallbackTyping.preload = "auto";
-            this._fallbackTyping.loop = true;
-        } catch (e) { this._fallbackTyping = null; }
+            this.fallbackTyping = new Audio("./assets/audio/keyboard.wav");
+            this.fallbackTyping.preload = "auto";
+            this.fallbackTyping.loop = true;
+        } catch (e) { this.fallbackTyping = null; }
         try {
-            this._fallbackPopup = new Audio("./assets/audio/popup.mp3");
-            this._fallbackPopup.preload = "auto";
-        } catch (e) { this._fallbackPopup = null; }
+            this.fallbackPopup = new Audio("./assets/audio/popup.mp3");
+            this.fallbackPopup.preload = "auto";
+        } catch (e) { this.fallbackPopup = null; }
     }
 
-    _decodeInto(url, trimSeconds, assign) {
+    decodeInto(url, trimSeconds, assign) {
         fetch(url)
             .then(r => r.arrayBuffer())
             .then(bytes => this.audioCtx.decodeAudioData(bytes))
@@ -126,17 +129,19 @@ class AudioManager {
     }
 
     //  volume helpers
-    _computedMusicVol() {
-        return this.musicOn ? (this.masterVolume * this.musicVolume) : 0;
+    computedMusicVol() {
+        if (!this.musicOn) return 0;
+        return this.masterVolume * this.musicVolume;
     }
-    _computedSfxVol() {
+
+    computedSfxVol() {
         return this.masterVolume * this.sfxVolume;
     }
 
     // called by SettingsScene whenever a slider/toggle changes.
     applyVolumes() {
-        if (this.menuMusic) this.menuMusic.volume = this._computedMusicVol();
-        if (this.gameMusic) this.gameMusic.volume = this._computedMusicVol();
+        if (this.menuMusic) this.menuMusic.volume = this.computedMusicVol();
+        if (this.gameMusic) this.gameMusic.volume = this.computedMusicVol();
         // if music was just turned off mid track, pause; if turned on, resume current track.
         if (!this.musicOn) {
             if (this.menuMusic) this.menuMusic.pause();
@@ -145,6 +150,11 @@ class AudioManager {
             this.menuMusic.play().catch(() => {});
         } else if (this.currentTrack === "game" && this.gameMusic) {
             this.gameMusic.play().catch(() => {});
+        }
+
+        // if dialogue typing was turned off mid-type, kill it right now so it doesnt keep looping
+        if (!this.dialogueOn && this.typingLoopNode) {
+            this.stopTyping();
         }
     }
 
@@ -162,7 +172,7 @@ class AudioManager {
         this.currentTrack = "menu";
         if (this.gameMusic) { this.gameMusic.pause(); this.gameMusic.currentTime = 0; }
         if (!this.menuMusic || !this.musicOn) return;
-        this.menuMusic.volume = this._computedMusicVol();
+        this.menuMusic.volume = this.computedMusicVol();
         this.menuMusic.play().catch(e => console.log("Menu music blocked:", e));
     }
 
@@ -170,10 +180,10 @@ class AudioManager {
         this.currentTrack = "game";
         if (this.menuMusic) { this.menuMusic.pause(); this.menuMusic.currentTime = 0; }
         if (!this.gameMusic || !this.musicOn) return;
-        this.gameMusic.volume = this._computedMusicVol();
+        this.gameMusic.volume = this.computedMusicVol();
         this.gameMusic.play().catch(e => console.log("Game music blocked:", e));
     }
-    
+
 
     stopAllMusic() {
         this.currentTrack = null;
@@ -189,7 +199,7 @@ class AudioManager {
             this.winSound.play().catch(() => {});
         }
     }
-    
+
     playLose() {
         MUSIC.stopAllMusic();
         if (this.loseSound) {
@@ -200,13 +210,14 @@ class AudioManager {
     }
 
     playClick() {
-        this._playBuffer(this.clickBuffer, this._fallbackClick, false);
+        this.playBuffer(this.clickBuffer, this.fallbackClick, false);
     }
 
     playPopup() {
-        this._playBuffer(null, this._fallbackPopup, false);
+        this.playBuffer(null, this.fallbackPopup, false);
     }
-    
+
+    // typing sfx for the BSOD / pink screen boot text (fast + loud)
     startTyping() {
         if (this.audioCtx && this.typingBuffer) {
             this.stopTyping(); // don't stack loops
@@ -217,35 +228,40 @@ class AudioManager {
             src.playbackRate.value = 2.0;
 
             const g = this.audioCtx.createGain();
-            g.gain.value = this._computedSfxVol();
+            g.gain.value = this.computedSfxVol();
             src.connect(g).connect(this.audioCtx.destination);
             src.start(0);
             this.typingLoopNode = { source: src, gain: g };
-        } else if (this._fallbackTyping) {
-            this._fallbackTyping.volume = this._computedSfxVol();
-            this._fallbackTyping.playbackRate = 2.0;
-            this._fallbackTyping.currentTime = 0;
-            this._fallbackTyping.play().catch(() => {});
+        } else if (this.fallbackTyping) {
+            this.fallbackTyping.volume = this.computedSfxVol();
+            this.fallbackTyping.playbackRate = 2.0;
+            this.fallbackTyping.currentTime = 0;
+            this.fallbackTyping.play().catch(() => {});
         }
     }
+
+    // typing sfx for the in game dialogue box. gated by dialogueOn toggle in the settings menu. bumped the gain
+    // multiplier from 0.4 -> 0.9 because it was way too quiet compared to the fast typing sfx
     startDialogueTyping() {
+        if (!this.dialogueOn) return;  // dialogue sfx turned off in settings
+
         if (this.audioCtx && this.typingBuffer) {
             this.stopTyping();
             const src = this.audioCtx.createBufferSource();
             src.buffer = this.typingBuffer;
             src.loop = true;
-            src.playbackRate.value = 1.2;  
-    
+            src.playbackRate.value = 1.2;
+
             const g = this.audioCtx.createGain();
-            g.gain.value = this._computedSfxVol() * 0.4;  
+            g.gain.value = this.computedSfxVol() * 0.9;
             src.connect(g).connect(this.audioCtx.destination);
             src.start(0);
             this.typingLoopNode = { source: src, gain: g };
-        } else if (this._fallbackTyping) {
-            this._fallbackTyping.volume = this._computedSfxVol() * 0.4;
-            this._fallbackTyping.playbackRate = 1.2;
-            this._fallbackTyping.currentTime = 0;
-            this._fallbackTyping.play().catch(() => {});
+        } else if (this.fallbackTyping) {
+            this.fallbackTyping.volume = this.computedSfxVol() * 0.9;
+            this.fallbackTyping.playbackRate = 1.2;
+            this.fallbackTyping.currentTime = 0;
+            this.fallbackTyping.play().catch(() => {});
         }
     }
 
@@ -254,38 +270,31 @@ class AudioManager {
             try { this.typingLoopNode.source.stop(); } catch (e) {}
             this.typingLoopNode = null;
         }
-        if (this._fallbackTyping) {
-            this._fallbackTyping.pause();
-            this._fallbackTyping.currentTime = 0;
+        if (this.fallbackTyping) {
+            this.fallbackTyping.pause();
+            this.fallbackTyping.currentTime = 0;
         }
     }
 
-    _playBuffer(buffer, fallbackAudio, loop) {
+    playBuffer(buffer, fallbackAudio, loop) {
         if (this.audioCtx && buffer) {
             const src = this.audioCtx.createBufferSource();
             src.buffer = buffer;
             src.loop = !!loop;
             const g = this.audioCtx.createGain();
-            g.gain.value = this._computedSfxVol();
+            g.gain.value = this.computedSfxVol();
             src.connect(g).connect(this.audioCtx.destination);
             src.start(0);
             return;
         }
         if (fallbackAudio) {
             try {
-                fallbackAudio.volume = this._computedSfxVol();
+                fallbackAudio.volume = this.computedSfxVol();
                 fallbackAudio.currentTime = 0;
                 fallbackAudio.play().catch(() => {});
             } catch (e) { /* we ignore, do nothing */ }
         }
     }
-
-    toggle() {
-        this.musicOn = !this.musicOn;
-        this.applyVolumes();
-        return !this.musicOn;
-    }
-    stop() { this.stopAllMusic(); }
 }
 
 // expose as name existing scenes already import
