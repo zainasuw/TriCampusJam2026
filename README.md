@@ -15,11 +15,17 @@ This project is built using a custom game engine. While they appear in the GitHu
 
 ### Visual Assets
 Female Sprite was custom made by Zainab Stanikzy via VRoid Studio.
+Tutorial Sprite was custom made by Salima Hafurova via VRoid Studio. 
 * [Dating Sim UI](https://loudeyes.itch.io/dating-sim-ui-pack): Lynda Mc Donald aka Loudeyes
 * Male Sprites (Base Models via VRoid Hub):
   * [Male Sprite Model 1](https://hub.vroid.com/en/characters/4628769120589518870/models/936409733805475888) by Ohio Aizen.
   * [Male Sprite Model 2](https://hub.vroid.com/en/characters/6786208678772699393/models/5978457387598254978) by シン（Shin).
   * [Male Sprite Model 3](https://hub.vroid.com/en/characters/1796788517347282552/models/2270102209632476570) by VenusVariation.
+* [Hand drawn video game set elements](https://www.freepik.com/free-vector/hand-drawn-video-game-set-elements_40484574.htm) by [freepik](https://www.freepik.com/)
+* [Sexy and Cute VFX](https://pipoya.itch.io/pipoya-sexy-and-cute-vfx) by [Pipoya](https://pipoya.itch.io/)
+
+### Music Assets
+
 ---
 ##  Play the Game 
 You can play the live version of the game here:
